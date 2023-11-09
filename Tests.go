@@ -24,6 +24,143 @@ func DropAndCreateInvoice(db *sqlx.DB) (err error) {
 	return nil
 }
 
+func TestSkewedWrite(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel) (err error) {
+	fmt.Println("----------------TestSkewedWrite-----------------")
+	//create table invoices
+	createDoctorsString := `CREATE TABLE doctors(
+    shift_id bigint,
+    name text NOT NULL,
+    on_call bool
+)`
+	if _, err = db.Exec(createDoctorsString); err != nil {
+		fmt.Printf("Failed to create doctors: %s", err)
+		return
+	}
+
+	initDoctorsString := `INSERT INTO doctors(shift_id, name, on_call) VALUES
+                                                 (123,'Alice',true),
+                                                 (123, 'Bob',true)`
+
+	if _, err = db.Exec(initDoctorsString); err != nil {
+		fmt.Printf("Failed to init doctors: %s", err)
+		return
+	}
+
+	defer func() {
+		if _, err = db.Exec(`Drop table doctors`); err != nil {
+			fmt.Printf("Failed to drop doctors: %s", err)
+			return
+		}
+	}()
+
+	//create transaction 1
+	var tx1 *sqlx.Tx
+	if tx1, err = db.BeginTxx(ctx, &sql.TxOptions{
+		Isolation: txLevel,
+		ReadOnly:  false,
+	}); err != nil {
+		fmt.Printf("failed to create transaction: %s", err)
+		return
+	}
+
+	fmt.Println("Transaction 1 created")
+
+	//create transaction 2
+	var tx2 *sqlx.Tx
+	if tx2, err = db.BeginTxx(ctx, &sql.TxOptions{
+		Isolation: txLevel,
+		ReadOnly:  false,
+	}); err != nil {
+		fmt.Printf("failed to create transaction: %s", err)
+		return
+	}
+
+	fmt.Println("Transaction 2 created")
+
+	group, _ := errgroup.WithContext(ctx)
+	group.Go(func() error {
+
+		//Alice
+		row := tx1.QueryRow(`SELECT count(*) FROM doctors Where shift_id = 123 and on_call = true`)
+
+		if err = row.Err(); err != nil {
+			fmt.Printf("Failed to select 1: %s", err)
+			return err
+		}
+
+		var count int
+		if err = row.Scan(&count); err != nil {
+			fmt.Printf("failed to scan 1 invoiceAmount: %s", err)
+			return err
+		}
+
+		if count > 1 {
+			if _, err = tx1.Exec(`UPDATE doctors SET on_call = false WHERE shift_id = 123 AND name = 'Alice' `); err != nil {
+				fmt.Printf("failed exec update invoice: %s", err)
+				return err
+			}
+		}
+
+		if err = tx1.Commit(); err != nil {
+			fmt.Printf("error to commit transaction: %s", err)
+			return err
+		}
+		fmt.Println("Transaction 1 committed")
+
+		return nil
+	})
+
+	group.Go(func() error {
+
+		//Bob
+		row := tx2.QueryRow(`SELECT count(*) FROM doctors Where shift_id = 123 and on_call = true`)
+
+		if err = row.Err(); err != nil {
+			fmt.Printf("Failed to select 1: %s", err)
+			return err
+		}
+
+		var count int
+		if err = row.Scan(&count); err != nil {
+			fmt.Printf("failed to scan 1 invoiceAmount: %s", err)
+			return err
+		}
+
+		if count > 1 {
+			if _, err = tx2.Exec(`UPDATE doctors SET on_call = false WHERE shift_id = 123 AND name = 'Bob' `); err != nil {
+				fmt.Printf("failed exec update invoice: %s", err)
+				return err
+			}
+		}
+
+		if err = tx2.Commit(); err != nil {
+			fmt.Printf("error to commit transaction: %s", err)
+			return err
+		}
+		fmt.Println("Transaction 2 committed")
+
+		return nil
+	})
+
+	err = group.Wait()
+	if err != nil {
+		fmt.Printf("waitgroup error: %s", err)
+		return
+	}
+
+	var countOnCall int
+	row := db.QueryRow(`Select count(*) from doctors WHERE shift_id = 123 AND on_call = true`)
+
+	if err = row.Scan(&countOnCall); err != nil {
+		fmt.Printf("failed to scan 1 countOnCall: %s", err)
+		return
+	}
+
+	fmt.Printf("Count on call: %d \n", countOnCall)
+
+	return
+}
+
 func TestShareLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel) (err error) {
 	fmt.Println("----------------TestShareLock-----------------")
 
@@ -394,8 +531,135 @@ func TestLostUpdateBetweenTransactionAndBasic(ctx context.Context, db *sqlx.DB, 
 	return
 }
 
-func TestLostUpdateBetweenTransactionAndTransaction(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel) (err error) {
-	fmt.Println("----------------Lost Update between Transaction And Transaction-----------------")
+func TestLostUpdateBetweenTransactionAndTransactionReadAndUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel) (err error) {
+	fmt.Println("----------------Lost Update between Transaction And Transaction Read and Update-----------------")
+
+	//create transaction 1
+	var tx1 *sqlx.Tx
+	if tx1, err = db.BeginTxx(ctx, &sql.TxOptions{
+		Isolation: txLevel,
+		ReadOnly:  false,
+	}); err != nil {
+		fmt.Printf("failed to create transaction: %s", err)
+		return
+	}
+
+	fmt.Println("Transaction 1 created")
+
+	//create transaction 2
+	var tx2 *sqlx.Tx
+	if tx2, err = db.BeginTxx(ctx, &sql.TxOptions{
+		Isolation: txLevel,
+		ReadOnly:  false,
+	}); err != nil {
+		fmt.Printf("failed to create transaction: %s", err)
+		return
+	}
+
+	fmt.Println("Transaction 2 created")
+
+	var (
+		row        *sql.Row
+		invoiceSum int
+	)
+	if row = db.QueryRow(`Select amount from invoices where id = 1`); err != nil {
+		fmt.Printf("failed select invoice sum: %s", err)
+		return err
+	}
+
+	if err = row.Scan(&invoiceSum); err != nil {
+		fmt.Printf("failed to scan 1 invoiceSum: %s", err)
+		return err
+	}
+
+	fmt.Printf("Invoice sum before update in transactions: %d \n", invoiceSum)
+
+	group, _ := errgroup.WithContext(ctx)
+	group.Go(func() error {
+
+		//select and print current invoice sum
+		var invoiceSum1 int
+		row1 := tx1.QueryRow(`Select amount from invoices where id = 1`)
+
+		if err = row1.Scan(&invoiceSum1); err != nil {
+			fmt.Printf("failed to scan 1 invoiceSum: %s", err)
+			return err
+		}
+
+		fmt.Printf("invoiceSum1 sum before update in transactions: %d \n", invoiceSum1)
+
+		time.Sleep(time.Millisecond * 500)
+
+		//update invoice in 1 transaction
+		if _, err = tx1.Exec(`Update invoices set amount = $1 + 500 WHERE id = 1`, invoiceSum1); err != nil {
+			fmt.Printf("failed exec update invoice tx1: %s", err)
+			return err
+		}
+
+		if err = tx1.Commit(); err != nil {
+			fmt.Printf("error to commit transaction 1: %s", err)
+			return err
+		}
+		fmt.Println("Transaction 1 committed")
+
+		return nil
+	})
+
+	group.Go(func() error {
+		var invoiceSum2 int
+		row2 := db.QueryRow(`Select amount from invoices where id = 1`)
+
+		if err = row2.Scan(&invoiceSum2); err != nil {
+			fmt.Printf("failed to scan 2 invoiceSum: %s", err)
+			return err
+		}
+
+		fmt.Printf("invoiceSum2 sum before update in transactions: %d \n", invoiceSum2)
+
+		time.Sleep(time.Millisecond * 500)
+
+		//update invoice in 2 transaction
+		if _, err = tx2.Exec(`Update invoices set amount = $1 + 200 WHERE id = 1`, invoiceSum2); err != nil {
+			fmt.Printf("failed exec update invoice tx2: %s", err)
+			return err
+		}
+
+		if err = tx2.Commit(); err != nil {
+			fmt.Printf("error to commit 2 transaction: %s", err)
+			return err
+		}
+
+		fmt.Println("Transaction 2 created")
+
+		return nil
+	})
+
+	err = group.Wait()
+	if err != nil {
+		fmt.Printf("waitgroup error: %s", err)
+		return
+	}
+
+	//select invoice again
+	row = db.QueryRow(`Select amount from invoices WHERE id = 1`)
+
+	if row.Err() != nil {
+		fmt.Printf("failed select amount: %s", err)
+		return
+	}
+
+	if err = row.Scan(&invoiceSum); err != nil {
+		fmt.Printf("failed to scan invoice: %s", err)
+		return
+	}
+
+	fmt.Printf("Invoice count after update both transaction(must be 1700): %d \n", invoiceSum)
+
+	return
+}
+
+func TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel) (err error) {
+	fmt.Println("----------------Lost Update between Transaction And Transaction Atomic Update-----------------")
 
 	//create transaction 1
 	var tx1 *sqlx.Tx

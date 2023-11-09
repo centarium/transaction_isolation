@@ -118,8 +118,8 @@ func SerializationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = TestLostUpdateBetweenTransactionAndTransaction(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestLostUpdateBetweenTransactionAndTransaction error: %s", err)
+	if err = TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate(ctx, db, txLevel); err != nil {
+		fmt.Printf("TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate error: %s", err)
 		err = nil
 	}
 

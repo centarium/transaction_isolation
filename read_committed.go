@@ -124,8 +124,8 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 		}*/
 
 	//first transaction will have committed, than second transaction will commit
-	if err = TestLostUpdateBetweenTransactionAndTransaction(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestLostUpdateBetweenTransactionAndTransaction error: %s", err)
+	if err = TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate(ctx, db, txLevel); err != nil {
+		fmt.Printf("TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate error: %s", err)
 		return
 	}
 
@@ -136,6 +136,26 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 
 	if err = TestSerializationAnomaly(ctx, db, txLevel); err != nil {
 		fmt.Printf("TestSerializationAnomaly error: %s", err)
+		return
+	}
+
+	if err = DropAndCreateInvoice(db); err != nil {
+		fmt.Printf("DropAndCreateInvoice error: %s", err)
+		return
+	}
+
+	if err = TestLostUpdateBetweenTransactionAndTransactionReadAndUpdate(ctx, db, txLevel); err != nil {
+		fmt.Printf("TestLostUpdateBetweenTransactionAndTransactionReadAndUpdate error: %s", err)
+		return
+	}
+
+	if err = DropAndCreateInvoice(db); err != nil {
+		fmt.Printf("DropAndCreateInvoice error: %s", err)
+		return
+	}
+
+	if err = TestSkewedWrite(ctx, db, txLevel); err != nil {
+		fmt.Printf("TestSkewedWrite error: %s", err)
 		return
 	}
 
