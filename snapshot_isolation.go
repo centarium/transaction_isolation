@@ -19,33 +19,10 @@ func init() {
 }
 
 func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
-	db, err := GetDbConnection()
+	dbName := GetDbName(args)
+	db, err := CreateInvoices(dbName)
 	if err != nil {
-		fmt.Printf("failed to connect db server: %s", err)
-		return
-	}
-
-	if _, err = db.Exec(`Drop Table if exists invoices;`); err != nil {
-		fmt.Printf("failed exec drop invoices: %s", err)
-		return
-	}
-
-	//create table invoices
-	createInvoicesString := `CREATE TABLE invoices(
-    id bigint primary key,
-    name text NOT NULL,
-    amount bigint,
-    created_at timestamp default now(),
-    updated_at timestamp default now()
-)`
-
-	if _, err = db.Exec(createInvoicesString); err != nil {
-		fmt.Printf("failed exec create invoices: %s", err)
-		return
-	}
-
-	if err = DropAndCreateInvoice(db); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
+		fmt.Printf("failed to create invoices: %s", err)
 		return
 	}
 
@@ -58,7 +35,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db); err != nil {
+	if err = DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -68,7 +45,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db); err != nil {
+	if err = DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -78,7 +55,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db); err != nil {
+	if err = DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -88,7 +65,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db); err != nil {
+	if err = DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -98,7 +75,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db); err != nil {
+	if err = DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -126,7 +103,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		err = nil
 	}
 
-	if err = DropAndCreateInvoice(db); err != nil {
+	if err = DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -136,7 +113,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db); err != nil {
+	if err = DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -146,7 +123,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db); err != nil {
+	if err = DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}

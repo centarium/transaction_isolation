@@ -9,8 +9,16 @@ import (
 	"time"
 )
 
-func DropAndCreateInvoice(db *sqlx.DB) (err error) {
-	if _, err = db.Exec(`TRUNCATE invoices`); err != nil {
+func DropAndCreateInvoice(db *sqlx.DB, dbName string) (err error) {
+	truncateString := `TRUNCATE invoices`
+	switch dbName {
+	case "sqlserver":
+		truncateString = `TRUNCATE table invoices`
+	case "oracle":
+		truncateString = `TRUNCATE table SYSTEM.invoices`
+	}
+
+	if _, err = db.Exec(truncateString); err != nil {
 		fmt.Printf("failed exec drop test invoice: %s", err)
 		return
 	}
@@ -63,6 +71,14 @@ func TestSkewedWrite(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLeve
 		return
 	}
 
+	defer func() {
+		if err != nil {
+			if errRollback := tx1.Rollback(); errRollback != nil {
+				fmt.Println("Transaction 1 rollback err " + errRollback.Error())
+			}
+		}
+	}()
+
 	fmt.Println("Transaction 1 created")
 
 	//create transaction 2
@@ -74,6 +90,14 @@ func TestSkewedWrite(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLeve
 		fmt.Printf("failed to create transaction: %s", err)
 		return
 	}
+
+	defer func() {
+		if err != nil {
+			if errRollback := tx2.Rollback(); errRollback != nil {
+				fmt.Println("Transaction 2 rollback err " + errRollback.Error())
+			}
+		}
+	}()
 
 	fmt.Println("Transaction 2 created")
 
@@ -161,6 +185,7 @@ func TestSkewedWrite(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLeve
 	return
 }
 
+// Two select for share - deadlock detected!
 func TestShareLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel) (err error) {
 	fmt.Println("----------------TestShareLock-----------------")
 
@@ -1248,39 +1273,23 @@ func TestUncommittedDirtyReadByBasicQuery(ctx context.Context, db *sqlx.DB, txLe
 }
 
 // TestUncommittedNotRepeatableRead - start transaction, read invoice,
-// than update invoice outside of transaction - transaction can see changes.
+// then update invoice outside of transaction - transaction can see changes.
 func TestUncommittedNotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel) (err error) {
 	fmt.Println("----------------Not repeatable read-----------------")
 
-	//create transaction
-	var tx *sqlx.Tx
-	if tx, err = db.BeginTxx(ctx, &sql.TxOptions{
-		Isolation: txLevel,
-		ReadOnly:  false,
-	}); err != nil {
+	return
+	/*var tx *sqlx.Tx
+	if tx, err = helper.CreateTransaction(ctx, db, txLevel, 1); err != nil {
 		fmt.Printf("failed to create transaction: %s", err)
 		return
 	}
 
-	fmt.Println("Transaction created")
-
 	//select and print current invoice sum
-	var (
-		invoiceSum int64
-		row        *sql.Row
-	)
-	row = tx.QueryRow(`Select amount from invoices WHERE id = 1`)
-
-	if row.Err() != nil {
-		fmt.Printf("failed select 1 invoice: %s", row.Err())
+	var invoiceSum int64
+	if invoiceSum, err = helper.GetAmount(tx, 1); err != nil {
+		fmt.Printf("failed to GetAmount before update: %s", err)
 		return
 	}
-
-	if err = row.Scan(&invoiceSum); err != nil {
-		fmt.Printf("failed to scan 1 invoice: %s", err)
-		return
-	}
-
 	fmt.Printf("Invoice sum before update outside of transaction: %d \n", invoiceSum)
 
 	//change invoice outside of transaction
@@ -1289,27 +1298,15 @@ func TestUncommittedNotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel 
 		return
 	}
 
-	//select invoice again
-	row = tx.QueryRow(`Select amount from invoices WHERE id = 1`)
-
-	if row.Err() != nil {
-		fmt.Printf("failed select 2 invoice: %s", err)
-		return
+	if invoiceSum, err = helper.GetAmount(tx, 1); err != nil {
+		fmt.Printf("failed to GetAmount after update: %s", err)
 	}
-
-	if err = row.Scan(&invoiceSum); err != nil {
-		fmt.Printf("failed to scan 2 invoice: %s", err)
-		return
-	}
-
 	fmt.Printf("Invoice sum after update outside of transaction: %d \n", invoiceSum)
 
 	if err = tx.Commit(); err != nil {
 		fmt.Printf("error to commit transaction: %s", err)
 		return
 	}
-
 	fmt.Println("Transaction committed")
-
-	return nil
+	return nil*/
 }

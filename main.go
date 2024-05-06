@@ -3,26 +3,18 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"github.com/spf13/cobra"
 	"log"
 )
 
 var (
 	rootCmd = &cobra.Command{
-		Use: "Transaction Isolation",
+		Use:     "<isolation_level> <database>",
+		Example: "read_committed postgres",
+		//<database>: "postgres", "mysql", "oracle", "sqlserver"
+		ValidArgs: []string{"read_uncommitted <database>", "read_committed <database>"},
 	}
 )
-
-func GetInitConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("pgx", "postgres://admin:1234@localhost:5432/postgres?connect_timeout=5&sslmode=disable&search_path=public")
-	return
-}
-
-func GetDbConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("pgx", "postgres://admin:1234@localhost:5432/transaction_isolation?connect_timeout=5&sslmode=disable&search_path=public")
-	return
-}
 
 func main() {
 	var err error
