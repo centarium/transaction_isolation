@@ -62,16 +62,14 @@ func NotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLe
 		}()
 		time.Sleep(time.Millisecond * 100)
 
-		/*if err = tx2.PrintAmount(); err != nil {
+		if err = tx2.PrintAmount(); err != nil {
 			return err
-		}*/
+		}
 
 		//update invoice in transaction 2
 		if err = tx2.UpdateInvoice(1500, false); err != nil {
 			return err
 		}
-
-		tx2.Commit()
 
 		return nil
 	})

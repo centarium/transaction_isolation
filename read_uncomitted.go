@@ -46,17 +46,26 @@ func ReadUncommittedIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
+	//mysql: Deadlock found
+	//postgres: deadlock detected
+	//sqlserver: Transaction was deadlocked
+	//oracle: - error - not supported
+	if err = tests.ShareLocks(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("ShareLocks error: %s", err)
+		return
+	}
+
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+		fmt.Printf("DropAndCreateInvoice error: %s", err)
+		return
+	}
+
 	return
 
 	/*if err = TestUncommittedNotRepeatableRead(ctx, db, txLevel); err != nil {
 		fmt.Printf("TestUncommittedNotRepeatableRead error: %s", err)
 		return
 	}*/
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
-	}
 
 	/*
 		if err = TestUncommittedDirtyReadByBasicQuery(ctx, db, txLevel); err != nil {

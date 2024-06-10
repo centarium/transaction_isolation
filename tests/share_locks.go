@@ -18,7 +18,7 @@ func ShareLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, db
 	group.Go(func() error {
 		var tx1 *helper.Transaction
 		if tx1, err = helper.CreateTransaction(ctx, db, txLevel, 1, dbName); err != nil {
-			return
+			return err
 		}
 		defer func() {
 			tx1.Close(err)
@@ -28,6 +28,7 @@ func ShareLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, db
 			return err
 		}
 		time.Sleep(time.Millisecond * 100)
+
 		if err = tx1.UpdateInvoice(1500, false); err != nil {
 			return err
 		}
@@ -37,7 +38,7 @@ func ShareLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, db
 	group.Go(func() error {
 		var tx2 *helper.Transaction
 		if tx2, err = helper.CreateTransaction(ctx, db, txLevel, 2, dbName); err != nil {
-			return
+			return err
 		}
 		defer func() {
 			tx2.Close(err)
@@ -47,12 +48,18 @@ func ShareLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, db
 			return err
 		}
 		time.Sleep(time.Millisecond * 100)
-		//change invoice amount in tx2: 1000 -> 1500
+
 		if err = tx2.UpdateInvoice(1500, false); err != nil {
 			return err
 		}
 		return err
 	})
+
+	err = group.Wait()
+	if err != nil {
+		fmt.Printf("waitgroup error: %s", err)
+		return
+	}
 
 	return
 }

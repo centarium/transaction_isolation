@@ -152,22 +152,6 @@ func TestSelectForUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.Isolation
 func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Lost Update-----------------")
 
-	var tx1 *helper.Transaction
-	if tx1, err = helper.CreateTransaction(ctx, db, txLevel, 1, dbName); err != nil {
-		return
-	}
-	defer func() {
-		tx1.Close(err)
-	}()
-
-	var tx2 *helper.Transaction
-	if tx2, err = helper.CreateTransaction(ctx, db, txLevel, 2, dbName); err != nil {
-		return
-	}
-	defer func() {
-		tx2.Close(err)
-	}()
-
 	//print current invoice sum
 	if err = helper.PrintAmount(db); err != nil {
 		return
@@ -175,6 +159,14 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 
 	group, _ := errgroup.WithContext(ctx)
 	group.Go(func() error {
+
+		var tx1 *helper.Transaction
+		if tx1, err = helper.CreateTransaction(ctx, db, txLevel, 1, dbName); err != nil {
+			return err
+		}
+		defer func() {
+			tx1.Close(err)
+		}()
 
 		var invoiceSum int64
 		if invoiceSum, err = tx1.GetAmount(); err != nil {
@@ -187,12 +179,19 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 			return err
 		}
 
-		tx1.Commit()
-
 		return nil
 	})
 
 	group.Go(func() error {
+
+		var tx2 *helper.Transaction
+		if tx2, err = helper.CreateTransaction(ctx, db, txLevel, 2, dbName); err != nil {
+			return err
+		}
+		defer func() {
+			tx2.Close(err)
+		}()
+
 		var invoiceSum int64
 		if invoiceSum, err = tx2.GetAmount(); err != nil {
 			return err
@@ -204,8 +203,6 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 		if err = tx2.UpdateInvoice(invoiceSum+200, false); err != nil {
 			return err
 		}
-
-		tx2.Commit()
 
 		return nil
 	})
