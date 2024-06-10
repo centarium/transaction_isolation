@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/centarium/transaction_isolation/tests"
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -145,12 +146,57 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 
 	txLevel := sql.LevelReadCommitted
 
-	//7/717
-	//7/717
-	//6/21
-	if err = TestShareLocks1(ctx, db, txLevel); err != nil {
-		fmt.Println("TestShareLocks err + " + err.Error())
+	//mysql: 1000
+	//postgres: 1000
+	//sqlserver: block(without READ_COMMITTED_SNAPSHOT  ON;)
+	//oracle: 1000
+	/*if err = tests.DirtyRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("DirtyRead error: %s", err)
+		return
 	}
+
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+		fmt.Printf("DropAndCreateInvoice error: %s", err)
+		return
+	}*/
+
+	//mysql: 1500
+	//postgres: 1500
+	//sqlserver: 1500
+	//oracle: 1500
+	/*if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestLostUpdateBetweenTransactionAndTransactionReadAndUpdate error: %s", err)
+		return
+	}
+
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+		fmt.Printf("DropAndCreateInvoice error: %s", err)
+		return
+	}*/
+
+	//mysql: 1500
+	//postgres: 1500
+	//sqlserver: 1500
+	//oracle: 1500
+	if err = tests.TestSelectForUpdate(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("DirtyRead error: %s", err)
+		return
+	}
+
+	/*
+		postgres: 1000, 1500
+		mysql: 1000, 1500
+		sqlserver: 1000, 1500
+		oracle: 1000, 1500
+	*/
+	/*if err = tests.NotRepeatableRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestUncommittedNotRepeatableRead error: %s", err)
+		return
+	}*/
+
+	/*if err = TestShareLocks1(ctx, db, txLevel); err != nil {
+		fmt.Println("TestShareLocks err + " + err.Error())
+	}*.
 
 	/*
 		if err = TestUncommittedNotRepeatableRead(ctx, db, txLevel); err != nil {

@@ -8,11 +8,12 @@ import (
 )
 
 var (
+	//test 3 parameters - isolation level, database, anomaly
 	rootCmd = &cobra.Command{
 		Use:     "<isolation_level> <database>",
 		Example: "read_committed postgres",
 		//<database>: "postgres", "mysql", "oracle", "sqlserver"
-		ValidArgs: []string{"read_uncommitted <database>", "read_committed <database>"},
+		ValidArgs: []string{"read_uncommitted <database>", "read_committed <database>", "snapshot_isolation <database>"},
 	}
 )
 

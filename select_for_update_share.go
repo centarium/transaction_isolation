@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/centarium/transaction_isolation/helper"
 	"github.com/spf13/cobra"
 	"time"
 )
@@ -37,7 +38,7 @@ func SelectUpdateShareCmd(_ *cobra.Command, args []string) (err error) {
 		err = nil
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/centarium/transaction_isolation/tests"
 	"github.com/spf13/cobra"
 )
 
@@ -30,66 +31,92 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 
 	txLevel := sql.LevelRepeatableRead
 
-	if err = TestUncommittedNotRepeatableRead(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestUncommittedNotRepeatableRead error: %s", err)
+	//sqlserver: error - deadlock, transaction1 rollbacked
+	//postgres: error - transaction2 rollbacked
+	//mysql: 1200
+	//oracle: error - isolation level is not supported
+	/*if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestLostUpdateBetweenTransactionAndTransactionReadAndUpdate error: %s", err)
 		return
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
-	}
+	}*/
 
-	if err = TestUncommittedDirtyReadByBasicQuery(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestUncommittedDirtyReadByBasicQuery error: %s", err)
-		return
-	}
-
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
-	}
-
-	if err = TestUncommittedDirtyReadByAnotherTransaction(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestUncommittedDirtyReadByAnotherTransaction error: %s", err)
-		return
-	}
-
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
-	}
-
-	if err = TestPhantomReadBetweenTransactionAndBasic(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestPhantomReadBetweenTransactionAndBasic error: %s", err)
-		return
-	}
-
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
-	}
-
-	if err = TestPhantomReadBetweenTransactionAndTransaction(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestPhantomReadBetweenTransactionAndTransaction error: %s", err)
-		return
-	}
-
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
+	/*
+		postgres: 1500, tx1: 1000
+		mysql: 1500, tx1: 1000
+		sqlserver: 1000, tx1: 1000, tx2 not committed, deadlock
+		oracle: error - isolation level not supported
+	*/
+	if err = tests.NotRepeatableRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("NotRepeatableRead error: %s", err)
 		return
 	}
 
 	/*
-		if err = TestLostUpdateBetweenTransactionAndBasic(ctx, db, txLevel); err != nil {
-			fmt.Printf("TestLostUpdateBetweenTransactionAndBasic error: %s", err)
+		if err = TestUncommittedNotRepeatableRead(ctx, db, txLevel); err != nil {
+			fmt.Printf("TestUncommittedNotRepeatableRead error: %s", err)
 			return
 		}
 
-		if err = DropAndCreateInvoice(db); err != nil {
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 			fmt.Printf("DropAndCreateInvoice error: %s", err)
 			return
-		}*/
+		}
+
+		if err = TestUncommittedDirtyReadByBasicQuery(ctx, db, txLevel); err != nil {
+			fmt.Printf("TestUncommittedDirtyReadByBasicQuery error: %s", err)
+			return
+		}
+
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", err)
+			return
+		}
+
+		if err = TestUncommittedDirtyReadByAnotherTransaction(ctx, db, txLevel); err != nil {
+			fmt.Printf("TestUncommittedDirtyReadByAnotherTransaction error: %s", err)
+			return
+		}
+
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", err)
+			return
+		}
+
+		if err = TestPhantomReadBetweenTransactionAndBasic(ctx, db, txLevel); err != nil {
+			fmt.Printf("TestPhantomReadBetweenTransactionAndBasic error: %s", err)
+			return
+		}
+
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", err)
+			return
+		}
+
+		if err = TestPhantomReadBetweenTransactionAndTransaction(ctx, db, txLevel); err != nil {
+			fmt.Printf("TestPhantomReadBetweenTransactionAndTransaction error: %s", err)
+			return
+		}
+
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", err)
+			return
+		}
+
+		/*
+			if err = TestLostUpdateBetweenTransactionAndBasic(ctx, db, txLevel); err != nil {
+				fmt.Printf("TestLostUpdateBetweenTransactionAndBasic error: %s", err)
+				return
+			}
+
+			if err = DropAndCreateInvoice(db); err != nil {
+				fmt.Printf("DropAndCreateInvoice error: %s", err)
+				return
+			}*/
 
 	//При апдейте первая транзакция закомиттит результат, затем вторая транзакция завершится с ошибкой
 	//чтобы не допустить аномалии потерянный апдейт, т.е.
@@ -98,12 +125,12 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	// Транзакция завершается с ошибкой из - за конфликтующих требований.
 	// С одной стороны, транзакции в данном режиме не должны видеть результаты друг друга,
 	// с другой - при одновременном апдейте в двух транзакциях одной и той же строки возникает потерянный апдейт
-	if err = TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate(ctx, db, txLevel); err != nil {
+	/*if err = TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate(ctx, db, txLevel); err != nil {
 		fmt.Printf("TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate error: %s", err)
 		err = nil
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -113,7 +140,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -123,7 +150,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -132,6 +159,6 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		fmt.Printf("TestSkewedWrite error: %s", err)
 		return
 	}
-
+	*/
 	return
 }

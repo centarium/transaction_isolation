@@ -1,39 +1,85 @@
 package tests
 
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"github.com/centarium/transaction_isolation/helper"
+	"github.com/jmoiron/sqlx"
+	"golang.org/x/sync/errgroup"
+	"time"
+)
+
 // TestUncommittedNotRepeatableRead - start transaction, read invoice,
 // then update invoice outside of transaction - transaction can see changes.
-/*func TestUncommittedNotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel) (err error) {
+func NotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Not repeatable read-----------------")
 
-	var tx *sqlx.Tx
-	if tx, err = helper.CreateTransaction(ctx, db, txLevel, 1); err != nil {
-		fmt.Printf("failed to create transaction: %s", err)
+	if err = helper.PrintAmount(db); err != nil {
 		return
 	}
 
-	//select and print current invoice sum
-	var invoiceSum int64
-	if invoiceSum, err = helper.GetAmount(tx, 1); err != nil {
-		fmt.Printf("failed to GetAmount before update: %s", err)
+	group, _ := errgroup.WithContext(ctx)
+	group.Go(func() error {
+		var tx1 *helper.Transaction
+		if tx1, err = helper.CreateTransaction(ctx, db, txLevel, 1, dbName); err != nil {
+			return err
+		}
+		defer func() {
+			tx1.Close(err)
+		}()
+		//print amount in tx1 before update amount
+		if err = tx1.PrintAmount(); err != nil {
+			return err
+		}
+		time.Sleep(time.Millisecond * 300)
+		//print amount after update in tx2 outside transaction
+		if err = helper.PrintAmount(db); err != nil {
+			return err
+		}
+		//print amount after update in tx2 in tx1
+		if err = tx1.PrintAmount(); err != nil {
+			return err
+		}
+
+		if err = tx1.UpdateInvoice(1800, false); err != nil {
+			return err
+		}
+
+		//sql server - wait for commit
+		time.Sleep(time.Second * 1)
+
+		return nil
+	})
+
+	group.Go(func() error {
+		var tx2 *helper.Transaction
+		if tx2, err = helper.CreateTransaction(ctx, db, txLevel, 2, dbName); err != nil {
+			return err
+		}
+		defer func() {
+			tx2.Close(err)
+		}()
+		time.Sleep(time.Millisecond * 100)
+
+		/*if err = tx2.PrintAmount(); err != nil {
+			return err
+		}*/
+
+		//update invoice in transaction 2
+		if err = tx2.UpdateInvoice(1500, false); err != nil {
+			return err
+		}
+
+		tx2.Commit()
+
+		return nil
+	})
+
+	err = group.Wait()
+	if err != nil {
+		fmt.Printf("waitgroup error: %s", err)
 		return
 	}
-	fmt.Printf("Update outside of transaction \n")
-
-	//change invoice outside of transaction
-	if _, err = db.Exec(`UPDATE invoices SET amount = 1500 Where id = $1`, 1); err != nil {
-		fmt.Printf("failed exec create invoices: %s", err)
-		return
-	}
-
-	if invoiceSum, err = helper.GetAmount(tx, 1); err != nil {
-		fmt.Printf("failed to GetAmount after update: %s", err)
-	}
-	fmt.Printf("Invoice sum after update outside of transaction: %d \n", invoiceSum)
-
-	if err = tx.Commit(); err != nil {
-		fmt.Printf("error to commit transaction: %s", err)
-		return
-	}
-	fmt.Println("Transaction committed")
 	return nil
-}*/
+}

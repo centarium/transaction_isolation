@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/centarium/transaction_isolation/helper"
 	"github.com/centarium/transaction_isolation/tests"
 	"github.com/spf13/cobra"
 )
@@ -35,24 +36,24 @@ func ReadUncommittedIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	//postgres: 1000 - as read committed
 	//sqlserver: 1500
 	//oracle: - error - not supported
-	if err = tests.DirtyReadLostUpdate(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("TestUncommittedDirtyReadByAnotherTransaction error: %s", err)
+	if err = tests.DirtyRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("DirtyRead error: %s", err)
 		return
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
 
 	return
 
-	if err = TestUncommittedNotRepeatableRead(ctx, db, txLevel); err != nil {
+	/*if err = TestUncommittedNotRepeatableRead(ctx, db, txLevel); err != nil {
 		fmt.Printf("TestUncommittedNotRepeatableRead error: %s", err)
 		return
-	}
+	}*/
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -73,7 +74,7 @@ func ReadUncommittedIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}

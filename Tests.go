@@ -9,29 +9,6 @@ import (
 	"time"
 )
 
-func DropAndCreateInvoice(db *sqlx.DB, dbName string) (err error) {
-	truncateString := `TRUNCATE invoices`
-	switch dbName {
-	case "sqlserver":
-		truncateString = `TRUNCATE table invoices`
-	case "oracle":
-		truncateString = `TRUNCATE table SYSTEM.invoices`
-	}
-
-	if _, err = db.Exec(truncateString); err != nil {
-		fmt.Printf("failed exec drop test invoice: %s", err)
-		return
-	}
-
-	//create invoice for tests
-	if _, err = db.Exec(`INSERT  into invoices(id, name, amount) VALUES (1, 'test_1', 1000)`); err != nil {
-		fmt.Printf("failed exec create invoices: %s", err)
-		return
-	}
-
-	return nil
-}
-
 func TestSkewedWrite(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel) (err error) {
 	fmt.Println("----------------TestSkewedWrite-----------------")
 	//create table invoices
@@ -683,6 +660,7 @@ func TestLostUpdateBetweenTransactionAndTransactionReadAndUpdate(ctx context.Con
 	return
 }
 
+// --------------------
 func TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel) (err error) {
 	fmt.Println("----------------Lost Update between Transaction And Transaction Atomic Update-----------------")
 

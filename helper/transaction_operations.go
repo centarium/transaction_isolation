@@ -7,6 +7,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+const (
+	InvoiceIdStr = "1"
+	InvoiceIdInt = 1
+)
+
 type Transaction struct {
 	tx             *sqlx.Tx
 	transactionNum int
@@ -16,16 +21,16 @@ type Transaction struct {
 }
 
 func (t *Transaction) PrintAmount() (err error) {
-	row := t.tx.QueryRow(`Select amount from invoices WHERE id = 1`)
+	row := t.tx.QueryRow(`Select amount from invoices WHERE id = ` + InvoiceIdStr)
 
 	if err = row.Err(); err != nil {
-		fmt.Printf("failed select invoice by transaction %d: %s", t.transactionNum, err)
+		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
 	var invoiceSum int64
 	if err = row.Scan(&invoiceSum); err != nil {
-		fmt.Printf("failed to scan invoice by transaction %d: %s", t.transactionNum, err)
+		fmt.Printf("failed to scan invoice by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
@@ -33,47 +38,96 @@ func (t *Transaction) PrintAmount() (err error) {
 	return
 }
 
-func (t *Transaction) GetAmount() (invoiceSum int64, err error) {
-	row := t.tx.QueryRow(`Select amount from invoices WHERE id = 1`)
+func (t *Transaction) GetAmountWithShareLock() (invoiceSum int64, err error) {
+	query := fmt.Sprintf("Select amount from invoices WHERE id = %d FOR SHARE", InvoiceIdInt)
+	if t.dbName == "sqlserver" {
+		query = fmt.Sprintf("Select amount from invoices WITH (HOLDLOCK, ROWLOCK) WHERE id = %d", InvoiceIdInt)
+	}
+
+	row := t.tx.QueryRow(query)
 
 	if err = row.Err(); err != nil {
-		fmt.Printf("failed select invoice by transaction %d: %s", t.transactionNum, err)
+		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
 	if err = row.Scan(&invoiceSum); err != nil {
-		fmt.Printf("failed to scan invoice by transaction %d: %s", t.transactionNum, err)
+		fmt.Printf("failed to scan invoice by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
-
-	fmt.Printf("Invoice sum in transaction %d: %d \n", t.transactionNum, invoiceSum)
 
 	return
 }
 
-func (t *Transaction) UpdateInvoice(newAmount int) (err error) {
+func (t *Transaction) GetAmountWithExclusiveLock() (invoiceSum int64, err error) {
+	query := fmt.Sprintf("Select amount from invoices WHERE id = %d FOR UPDATE", InvoiceIdInt)
+	if t.dbName == "sqlserver" {
+		query = fmt.Sprintf("Select amount from invoices WITH (UPDLOCK) WHERE id = %d", InvoiceIdInt)
+	}
+
+	row := t.tx.QueryRow(query)
+
+	if err = row.Err(); err != nil {
+		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
+		return
+	}
+
+	if err = row.Scan(&invoiceSum); err != nil {
+		fmt.Printf("failed to scan invoice by transaction %d: %s\n", t.transactionNum, err)
+		return
+	}
+
+	return
+}
+
+func (t *Transaction) GetAmount() (invoiceSum int64, err error) {
+	row := t.tx.QueryRow(`Select amount from invoices WHERE id = ` + InvoiceIdStr)
+
+	if err = row.Err(); err != nil {
+		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
+		return
+	}
+
+	if err = row.Scan(&invoiceSum); err != nil {
+		fmt.Printf("failed to scan invoice by transaction %d: %s\n", t.transactionNum, err)
+		return
+	}
+
+	return
+}
+
+func (t *Transaction) UpdateInvoice(newAmount int64, isIncrement bool) (err error) {
 	fmt.Printf("Update invoice amount in transaction %d to %d \n", t.transactionNum, newAmount)
+
+	queryLeftSide := `UPDATE invoices SET amount = `
+	if isIncrement {
+		queryLeftSide += `amount + `
+	}
 
 	var query string
 	switch t.dbName {
 	case "postgres":
-		query = `UPDATE invoices SET amount = $1 WHERE id = $2`
+		query = queryLeftSide + ` $1 WHERE id = $2`
 	case "mysql":
-		query = `UPDATE invoices SET amount = ? WHERE id = ?`
+		query = queryLeftSide + ` ? WHERE id = ?`
 	case "sqlserver":
-		query = `UPDATE invoices SET amount = @Amount WHERE id = @InvoiceID`
-		if _, err = t.tx.Exec(query, sql.Named("Amount", newAmount), sql.Named("InvoiceID", 1)); err != nil {
-			fmt.Printf("failed exec create invoice1 in transaction %d: %s", t.transactionNum, err)
+		query = queryLeftSide + ` @Amount WHERE id = @InvoiceID`
+		if _, err = t.tx.Exec(query, sql.Named("Amount", newAmount), sql.Named("InvoiceID", InvoiceIdInt)); err != nil {
+			fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
 		}
 		return
 	case "oracle":
-		query = `UPDATE invoices SET amount = $1 Where id = $2`
+		query = queryLeftSide + ` :Amount WHERE id = :InvoiceID`
+		if _, err = t.tx.Exec(query, sql.Named("Amount", newAmount), sql.Named("InvoiceID", InvoiceIdInt)); err != nil {
+			fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
+		}
+		return
 	default:
 		query = `UPDATE invoices SET amount = $1 Where id = $2`
 	}
 
-	if _, err = t.tx.Exec(query, newAmount, 1); err != nil {
-		fmt.Printf("failed exec create invoices in transaction %d: %s", t.transactionNum, err)
+	if _, err = t.tx.Exec(query, newAmount, InvoiceIdInt); err != nil {
+		fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
 		return
 	}
 	return
@@ -84,7 +138,7 @@ func CreateTransaction(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLe
 	if tx, err = db.BeginTxx(ctx, &sql.TxOptions{
 		Isolation: txLevel,
 	}); err != nil {
-		fmt.Printf("failed to create transaction %d: %s", transactionNum, err)
+		fmt.Printf("failed to create transaction %d: %s\n", transactionNum, err)
 		return
 	} else {
 		fmt.Printf("Transaction %d created \n", transactionNum)
@@ -110,7 +164,7 @@ func (t *Transaction) Commit() {
 		return
 	}
 	if err := t.tx.Commit(); err != nil {
-		fmt.Printf("error to commit transaction %d: %s", t.transactionNum, err)
+		fmt.Printf("error to commit transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
@@ -124,7 +178,7 @@ func (t *Transaction) Rollback() {
 		return
 	}
 	if err := t.tx.Rollback(); err != nil {
-		fmt.Printf("error to rollback transaction %d: %s", t.transactionNum, err)
+		fmt.Printf("error to rollback transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 

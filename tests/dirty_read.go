@@ -34,7 +34,7 @@ func DirtyRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbN
 	}
 
 	//change invoice amount in tx2: 1000 -> 1500
-	if err = tx2.UpdateInvoice(1500); err != nil {
+	if err = tx2.UpdateInvoice(1500, false); err != nil {
 		return
 	}
 

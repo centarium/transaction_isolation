@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/centarium/transaction_isolation/helper"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +40,7 @@ func SerializationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -49,7 +50,7 @@ func SerializationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -59,7 +60,7 @@ func SerializationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -69,7 +70,7 @@ func SerializationCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -90,7 +91,7 @@ func SerializationCmd(_ *cobra.Command, args []string) (err error) {
 			return
 		}*/
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
@@ -100,7 +101,7 @@ func SerializationCmd(_ *cobra.Command, args []string) (err error) {
 		err = nil
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}

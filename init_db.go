@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/centarium/transaction_isolation/helper"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/godror/godror"
 	_ "github.com/jackc/pgx/stdlib"
@@ -168,6 +169,7 @@ func getCreateInvoicesTableString(dbName string) string {
                          created_at datetime default CURRENT_TIMESTAMP,
                          updated_at datetime default CURRENT_TIMESTAMP )`
 	}
+	fmt.Println(" -> unknown db, switch to postgres ")
 	return postgresQuery
 }
 
@@ -195,7 +197,7 @@ func CreateInvoices(dbName string) (db *sqlx.DB, err error) {
 		return
 	}
 
-	if err = DropAndCreateInvoice(db, dbName); err != nil {
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
 	}
