@@ -10,14 +10,10 @@ import (
 	"time"
 )
 
-// TestUncommittedNotRepeatableRead - start transaction, read invoice,
+// NotRepeatableRead - start transaction, read invoice,
 // then update invoice outside of transaction - transaction can see changes.
 func NotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Not repeatable read-----------------")
-
-	if err = helper.PrintAmount(db); err != nil {
-		return
-	}
 
 	group, _ := errgroup.WithContext(ctx)
 	group.Go(func() error {
@@ -28,28 +24,19 @@ func NotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLe
 		defer func() {
 			tx1.Close(err)
 		}()
-		//print amount in tx1 before update amount
+		//print amount in tx1 before update amount in tx2
 		if err = tx1.PrintAmount(); err != nil {
 			return err
 		}
 		time.Sleep(time.Millisecond * 300)
-		//print amount after update in tx2 outside transaction
-		if err = helper.PrintAmount(db); err != nil {
-			return err
-		}
 		//print amount after update in tx2 in tx1
 		if err = tx1.PrintAmount(); err != nil {
 			return err
 		}
-
-		if err = tx1.UpdateInvoice(1800, false); err != nil {
-			return err
-		}
-
 		//sql server - wait for commit
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Millisecond * 500)
 
-		return nil
+		return err
 	})
 
 	group.Go(func() error {
@@ -62,16 +49,14 @@ func NotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLe
 		}()
 		time.Sleep(time.Millisecond * 100)
 
-		if err = tx2.PrintAmount(); err != nil {
-			return err
-		}
-
 		//update invoice in transaction 2
 		if err = tx2.UpdateInvoice(1500, false); err != nil {
 			return err
 		}
 
-		return nil
+		fmt.Println("Invoice updated")
+
+		return err
 	})
 
 	err = group.Wait()
@@ -79,5 +64,5 @@ func NotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLe
 		fmt.Printf("waitgroup error: %s", err)
 		return
 	}
-	return nil
+	return
 }
