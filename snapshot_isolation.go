@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/centarium/transaction_isolation/helper"
 	"github.com/centarium/transaction_isolation/tests"
 	"github.com/spf13/cobra"
 )
@@ -32,7 +33,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	txLevel := sql.LevelSnapshot
 
 	//sqlserver: Snapshot isolation transaction aborted due to update conflict
-	/*if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
+	if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestLostUpdate error: %s", err)
 		return
 	}
@@ -40,7 +41,7 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
-	}*/
+	}
 
 	//	sqlserver: 1000, tx1: 1000, tx2 commit, then tx1 commit
 	if err = tests.NotRepeatableRead(ctx, db, txLevel, dbName); err != nil {

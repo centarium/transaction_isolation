@@ -20,6 +20,26 @@ type Transaction struct {
 	dbName         string
 }
 
+const DB = "transaction_isolation"
+
+func (t *Transaction) PrintInvoicesSumByName(name string) (err error) {
+	row := t.tx.QueryRow(fmt.Sprintf(`Select sum(amount) from invoices WHERE name = '%s'`, name))
+
+	if err = row.Err(); err != nil {
+		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
+		return
+	}
+
+	var invoicesSum int64
+	if err = row.Scan(&invoicesSum); err != nil {
+		fmt.Printf("failed to scan invoice by transaction %d: %s\n", t.transactionNum, err)
+		return
+	}
+
+	fmt.Printf("Invoice sum in transaction %d: %d \n", t.transactionNum, invoicesSum)
+	return
+}
+
 func (t *Transaction) PrintAmount() (err error) {
 	row := t.tx.QueryRow(`Select amount from invoices WHERE id = ` + InvoiceIdStr)
 
@@ -93,6 +113,43 @@ func (t *Transaction) GetAmount() (invoiceSum int64, err error) {
 		return
 	}
 
+	return
+}
+
+func (t *Transaction) UpdateInvoiceId(newAmount int64, isIncrement bool) (err error) {
+	fmt.Printf("Update invoice amount in transaction %d to %d \n", t.transactionNum, newAmount)
+
+	queryLeftSide := `UPDATE invoices SET amount = `
+	if isIncrement {
+		queryLeftSide += `amount + `
+	}
+
+	var query string
+	switch t.dbName {
+	case "postgres":
+		query = queryLeftSide + ` $1 WHERE id = $2`
+	case "mysql":
+		query = queryLeftSide + ` ? WHERE id = ?`
+	case "sqlserver":
+		query = queryLeftSide + ` @Amount WHERE id = @InvoiceID`
+		if _, err = t.tx.Exec(query, sql.Named("Amount", newAmount), sql.Named("InvoiceID", 2)); err != nil {
+			fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
+		}
+		return
+	case "oracle":
+		query = queryLeftSide + ` :Amount WHERE id = :InvoiceID`
+		if _, err = t.tx.Exec(query, sql.Named("Amount", newAmount), sql.Named("InvoiceID", 2)); err != nil {
+			fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
+		}
+		return
+	default:
+		query = `UPDATE invoices SET amount = $1 Where id = $2`
+	}
+
+	if _, err = t.tx.Exec(query, newAmount, 2); err != nil {
+		fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
+		return
+	}
 	return
 }
 

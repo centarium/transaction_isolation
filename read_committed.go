@@ -83,8 +83,13 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 		sqlserver: 1000, 1500
 		oracle: 1000, 1500
 	*/
-	if err = tests.NotRepeatableRead(ctx, db, txLevel, dbName); err != nil {
+	/*if err = tests.NotRepeatableRead(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestUncommittedNotRepeatableRead error: %s", err)
+		return
+	}*/
+	//	sqlserver: 1000, tx1: 1000, tx2 commit, then tx1 commit
+	if err = tests.TestPhantomRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("NotRepeatableRead error: %s", err)
 		return
 	}
 

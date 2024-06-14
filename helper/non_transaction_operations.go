@@ -24,6 +24,19 @@ func PrintAmount(db *sqlx.DB) (err error) {
 }
 
 func DropAndCreateInvoice(db *sqlx.DB, dbName string) (err error) {
+	if err = TruncateInvoices(db, dbName); err != nil {
+		return err
+	}
+
+	//create invoice for tests
+	if err = CreateInvoice(db, InvoiceIdInt); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func TruncateInvoices(db *sqlx.DB, dbName string) (err error) {
 	truncateString := `TRUNCATE invoices`
 	switch dbName {
 	case "sqlserver":
@@ -36,14 +49,15 @@ func DropAndCreateInvoice(db *sqlx.DB, dbName string) (err error) {
 		fmt.Printf("failed exec drop test invoice: %s", err)
 		return
 	}
+	return nil
+}
 
-	//create invoice for tests
+func CreateInvoice(db *sqlx.DB, invoiceId int) (err error) {
 	if _, err = db.Exec(fmt.Sprintf(
-		"INSERT  into invoices(id, name, amount) VALUES (%d, 'test_1', 1000)", InvoiceIdInt,
+		"INSERT  into invoices(id, name, amount) VALUES (%d, 'test_1', 1000)", invoiceId,
 	)); err != nil {
 		fmt.Printf("failed exec create invoices: %s", err)
 		return
 	}
-
 	return nil
 }

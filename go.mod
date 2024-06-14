@@ -6,6 +6,7 @@ toolchain go1.22.1
 
 require (
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/godror/godror v0.42.1
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/microsoft/go-mssqldb v1.7.0
@@ -16,7 +17,6 @@ require (
 require (
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
-	github.com/godror/godror v0.42.1 // indirect
 	github.com/godror/knownpb v0.1.1 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect

@@ -164,7 +164,7 @@ func getCreateInvoicesTableString(dbName string) string {
 	case "sqlserver":
 		return `CREATE TABLE invoices(
                          id bigint primary key,
-                         name text NOT NULL,
+                         name NVARCHAR(255) NOT NULL,
                          amount bigint,
                          created_at datetime default CURRENT_TIMESTAMP,
                          updated_at datetime default CURRENT_TIMESTAMP )`
