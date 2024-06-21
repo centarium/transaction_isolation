@@ -25,7 +25,7 @@ func DirtyRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbN
 		return
 	}
 	defer func() {
-		tx2.Close(err)
+		tx2.Rollback()
 	}()
 
 	//print invoice amount in tx1: 1000

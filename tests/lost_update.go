@@ -149,7 +149,6 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 	}
 
 	//print current invoice sum
-	//must NOT be 1700
 	if err = helper.PrintAmount(db); err != nil {
 		return
 	}

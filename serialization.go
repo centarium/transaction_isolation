@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/centarium/transaction_isolation/helper"
+	"github.com/centarium/transaction_isolation/tests"
 	"github.com/spf13/cobra"
 )
 
@@ -35,81 +35,54 @@ func SerializationCmd(_ *cobra.Command, args []string) (err error) {
 
 	txLevel := sql.LevelSerializable
 
-	if err = TestUncommittedNotRepeatableRead(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestUncommittedNotRepeatableRead error: %s", err)
+	if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestLostUpdateBetweenTransactionAndTransactionReadAndUpdate error: %s", err)
+		return
+	}
+
+	//oracle: 1000, 1000
+	/*if err = tests.TestPhantomRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("NotRepeatableRead error: %s", err)
 		return
 	}
 
 	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
-	}
+	}*/
 
-	if err = TestUncommittedDirtyReadByBasicQuery(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestUncommittedDirtyReadByBasicQuery error: %s", err)
+	//oracle: 1000, tx1: 1000, tx2 commit, then tx1 commit
+	/*if err = tests.NotRepeatableRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("NotRepeatableRead error: %s", err)
 		return
-	}
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
-	}
-
-	if err = TestUncommittedDirtyReadByAnotherTransaction(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestUncommittedDirtyReadByAnotherTransaction error: %s", err)
-		return
-	}
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
-	}
-
-	if err = TestPhantomReadBetweenTransactionAndBasic(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestPhantomReadBetweenTransactionAndBasic error: %s", err)
-		return
-	}
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
-	}
-
-	if err = TestPhantomReadBetweenTransactionAndTransaction(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestPhantomReadBetweenTransactionAndTransaction error: %s", err)
-		return
-	}
+	}*/
 
 	/*
-		if err = DropAndCreateInvoice(db); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
-			return
-		}
+		postgres: 1000, ERROR: could not serialize access due to read/write dependencies among transactions (SQLSTATE 40001)
+		mysql: 1000
+		oracle: 0
+		sqlserver: 1000
+	*/
+	/*if err = tests.TestSkewedWriteWithdrawal(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestSkewedWriteWithdrawal error: %s", err)
+		return
+	}*/
 
-		if err = TestLostUpdateBetweenTransactionAndBasic(ctx, db, txLevel); err != nil {
-			fmt.Printf("TestLostUpdateBetweenTransactionAndBasic error: %s", err)
-			return
-		}*/
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+	/*if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
-	}
+	}*/
 
-	if err = TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestLostUpdateBetweenTransactionAndTransactionAtomicUpdate error: %s", err)
-		err = nil
-	}
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
+	/*
+		postgres: 1000
+		mysql: 1000
+		oracle: 1000
+		sqlserver: 1000
+	*/
+	/*if err = tests.TestWithdrawal(db, dbName); err != nil {
+		fmt.Printf("TestWithdrawal error: %s", err)
 		return
-	}
-
-	if err = TestSerializationAnomaly(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestSerializationAnomaly error: %s", err)
-		return
-	}
+	}*/
 
 	return
 }

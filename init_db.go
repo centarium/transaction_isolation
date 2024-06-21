@@ -111,9 +111,11 @@ func InitDBCmd(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	if _, err = db.Exec(dbDropString()); err != nil {
-		fmt.Printf("failed exec drop db script: %s", err)
-		return
+	if dbName != "oracle" {
+		if _, err = db.Exec(dbDropString()); err != nil {
+			fmt.Printf("failed exec drop db script: %s", err)
+			return
+		}
 	}
 
 	if _, err = db.Exec(dbInitString()); err != nil {
@@ -135,7 +137,7 @@ func dbInitString() string {
 func getCreateInvoicesTableString(dbName string) string {
 	postgresQuery := `CREATE TABLE invoices(
     	id bigint primary key,
-    	name text NOT NULL,
+    	user_id bigint NOT NULL,
     	amount bigint,
     	created_at timestamp default now(),
     	updated_at timestamp default now()
@@ -148,7 +150,7 @@ func getCreateInvoicesTableString(dbName string) string {
 	case "mysql":
 		return `CREATE TABLE invoices(
     	id bigint primary key,
-    	name text NOT NULL,
+    	user_id bigint NOT NULL,
     	amount bigint,
     	created_at timestamp default now(),
     	updated_at timestamp default now()
@@ -156,7 +158,7 @@ func getCreateInvoicesTableString(dbName string) string {
 	case "oracle":
 		return `CREATE TABLE invoices (
                           id NUMBER PRIMARY KEY,
-                          name VARCHAR2(255) NOT NULL,
+                          user_id NUMBER,
                           amount NUMBER,
                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -164,7 +166,7 @@ func getCreateInvoicesTableString(dbName string) string {
 	case "sqlserver":
 		return `CREATE TABLE invoices(
                          id bigint primary key,
-                         name NVARCHAR(255) NOT NULL,
+                         user_id bigint NOT NULL,
                          amount bigint,
                          created_at datetime default CURRENT_TIMESTAMP,
                          updated_at datetime default CURRENT_TIMESTAMP )`

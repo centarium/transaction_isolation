@@ -11,10 +11,12 @@ import (
 	"time"
 )
 
-const DB = "transaction_isolation"
-
 func TestPhantomRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Phantom Read-----------------")
+
+	defer func() {
+		helper.TruncateInvoices(db, dbName)
+	}()
 
 	group, _ := errgroup.WithContext(ctx)
 	group.Go(func() error {
@@ -26,11 +28,11 @@ func TestPhantomRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLeve
 			tx1.Close(err)
 		}()
 
-		if err = tx1.PrintInvoicesSumByName("test_1"); err != nil {
+		if err = tx1.PrintInvoicesSumByUserID(1); err != nil {
 			return err
 		}
 		time.Sleep(time.Millisecond * 200)
-		if err = tx1.PrintInvoicesSumByName("test_1"); err != nil {
+		if err = tx1.PrintInvoicesSumByUserID(1); err != nil {
 			return err
 		}
 
@@ -54,5 +56,5 @@ func TestPhantomRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLeve
 		return
 	}
 
-	return helper.TruncateInvoices(db, dbName)
+	return
 }

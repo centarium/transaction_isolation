@@ -61,49 +61,4 @@ func ReadUncommittedIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	}
 
 	return
-
-	/*if err = TestUncommittedNotRepeatableRead(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestUncommittedNotRepeatableRead error: %s", err)
-		return
-	}*/
-
-	/*
-		if err = TestUncommittedDirtyReadByBasicQuery(ctx, db, txLevel); err != nil {
-			fmt.Printf("TestUncommittedDirtyReadByBasicQuery error: %s", err)
-			return
-		}
-
-		if err = DropAndCreateInvoice(db); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
-			return
-		}*/
-
-	if err = TestExclusiveBlockAndReadOutsideTransaction(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestExclusiveBlockAndReadOutsideTransaction error: %s", err)
-		return
-	}
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
-	}
-
-	if err = TestShareBlockAndUpdateOutsideTransaction(ctx, db, txLevel); err != nil {
-		fmt.Printf("TestShareBlockAndUpdateOutsideTransaction error: %s", err)
-		return
-	}
-
-	//lock
-	/*
-		if err = DropAndCreateInvoice(db); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
-			return
-		}
-
-		if err = TestLostUpdateBetweenTransactionAndBasic(ctx, db, txLevel); err != nil {
-			fmt.Printf("TestLostUpdateBetweenTransactionAndBasic error: %s", err)
-			return
-		}*/
-
-	return
 }

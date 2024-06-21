@@ -12,7 +12,7 @@ import (
 
 // ShareLocks test share lock deadlock
 func ShareLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
-	fmt.Println("----------------Share locks -----------------")
+	fmt.Println("----------------Shared locks -----------------")
 
 	group, _ := errgroup.WithContext(ctx)
 	group.Go(func() error {

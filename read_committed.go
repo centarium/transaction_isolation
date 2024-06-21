@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/centarium/transaction_isolation/helper"
 	"github.com/centarium/transaction_isolation/tests"
 	"github.com/spf13/cobra"
 )
@@ -44,15 +45,14 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 	//postgres: 1000
 	//sqlserver: block(without READ_COMMITTED_SNAPSHOT  ON;)
 	//oracle: 1000
-	/*if err = tests.DirtyRead(ctx, db, txLevel, dbName); err != nil {
+	if err = tests.DirtyRead(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("DirtyRead error: %s", err)
-		return
 	}
 
 	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
-	}*/
+	}
 
 	//mysql: 1500
 	//postgres: 1500
@@ -87,11 +87,44 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 		fmt.Printf("TestUncommittedNotRepeatableRead error: %s", err)
 		return
 	}*/
-	//	sqlserver: 1000, tx1: 1000, tx2 commit, then tx1 commit
+
+	/*
+		postgres: 1000, 2000
+		mysql: 1000, 2000
+		sqlserver: 1000, 2000
+		oracle: 1000, 2000
+	*/
 	if err = tests.TestPhantomRead(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("NotRepeatableRead error: %s", err)
 		return
 	}
+
+	/*
+		postgres: 0
+		mysql: 0
+		oracle: 0
+		sqlserver: 1000
+	*/
+	/*if err = tests.TestSkewedWriteWithdrawal(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestSkewedWriteWithdrawal error: %s", err)
+		return
+	}
+
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+		fmt.Printf("DropAndCreateInvoice error: %s", err)
+		return
+	}*/
+
+	/*
+		postgres: 1000
+		mysql: 1000
+		oracle: 1000
+		sqlserver: 1000
+	*/
+	/*if err = tests.TestWithdrawal(db, dbName); err != nil {
+		fmt.Printf("TestWithdrawal error: %s", err)
+		return
+	}*/
 
 	return
 }

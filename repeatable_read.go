@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/centarium/transaction_isolation/helper"
 	"github.com/centarium/transaction_isolation/tests"
 	"github.com/spf13/cobra"
 )
@@ -34,9 +35,9 @@ func RepeatableReadCmd(_ *cobra.Command, args []string) (err error) {
 	//sqlserver: error - Transaction (Process ID 52) was deadlocked on lock resources with another
 	//process and has been chosen as the deadlock victim.  Rerun the transaction
 	//postgres: error - ERROR: could not serialize access due to concurrent update
-	//mysql: 1200
+	//mysql: 1500 - lost update
 	//oracle: error - isolation level is not supported
-	/*if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
+	if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestLostUpdate error: %s", err)
 		return
 	}
@@ -44,7 +45,7 @@ func RepeatableReadCmd(_ *cobra.Command, args []string) (err error) {
 	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
 		fmt.Printf("DropAndCreateInvoice error: %s", err)
 		return
-	}*/
+	}
 
 	/*
 		postgres: 1000, tx1: 1000, tx2 commit, then tx1 commit
@@ -63,20 +64,41 @@ func RepeatableReadCmd(_ *cobra.Command, args []string) (err error) {
 		sqlserver: 1000, 2000
 		oracle: isolation level not supported
 	*/
-	if err = tests.TestPhantomRead(ctx, db, txLevel, dbName); err != nil {
+	/*if err = tests.TestPhantomRead(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("NotRepeatableRead error: %s", err)
+		return
+	}*/
+
+	/*
+		postgres: 0
+		mysql: 0
+		oracle: 0
+		sqlserver: 1000
+	*/
+	/*if err = tests.TestSkewedWriteWithdrawal(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestSkewedWriteWithdrawal error: %s", err)
 		return
 	}
 
-	/*
+	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+		fmt.Printf("DropAndCreateInvoice error: %s", err)
+		return
+	}*/
 
+	/*
+		postgres: 1000
+		mysql: 1000
+		oracle: 1000
+		sqlserver: 1000
+	*/
+	/*if err = tests.TestWithdrawal(db, dbName); err != nil {
+		fmt.Printf("TestWithdrawal error: %s", err)
+		return
+	}*/
+
+	/*
 		if err = TestSerializationAnomaly(ctx, db, txLevel); err != nil {
 			fmt.Printf("TestSerializationAnomaly error: %s", err)
-			return
-		}
-
-		if err = TestSkewedWrite(ctx, db, txLevel); err != nil {
-			fmt.Printf("TestSkewedWrite error: %s", err)
 			return
 		}
 	*/

@@ -22,8 +22,8 @@ type Transaction struct {
 
 const DB = "transaction_isolation"
 
-func (t *Transaction) PrintInvoicesSumByName(name string) (err error) {
-	row := t.tx.QueryRow(fmt.Sprintf(`Select sum(amount) from invoices WHERE name = '%s'`, name))
+func (t *Transaction) PrintInvoicesSumByUserID(userID int) (err error) {
+	row := t.tx.QueryRow(fmt.Sprintf(`Select sum(amount) from invoices WHERE user_id = '%d'`, userID))
 
 	if err = row.Err(); err != nil {
 		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
@@ -113,6 +113,36 @@ func (t *Transaction) GetAmount() (invoiceSum int64, err error) {
 		return
 	}
 
+	return
+}
+
+func (t *Transaction) Withdrawal(invoiceId int, dbName string) (err error) {
+	if dbName == "mysql" {
+		querySetTotalAmount := `
+			SELECT SUM(amount) INTO @total_amount FROM transaction_isolation.invoices WHERE user_id = 1;
+		`
+		if _, err = t.tx.Exec(querySetTotalAmount); err != nil {
+			fmt.Printf("failed set @total_amount in transaction %d: %s \n", t.transactionNum, err)
+		}
+		queryUpdate := fmt.Sprintf(`
+			UPDATE invoices
+			SET amount = amount - 1000
+			WHERE id = %d AND amount >= 1000 AND @total_amount >= 2000
+		`, invoiceId)
+		if _, err = t.tx.Exec(queryUpdate); err != nil {
+			fmt.Printf("failed update amount in transaction %d: %s \n", t.transactionNum, err)
+		}
+
+		return
+	}
+
+	query := fmt.Sprintf(`UPDATE invoices SET amount = amount-1000 WHERE id = %d AND amount >=1000 AND  (
+      			SELECT SUM(amount) FROM invoices WHERE user_id = 1
+		) >= 2000`, invoiceId)
+
+	if _, err = t.tx.Exec(query); err != nil {
+		fmt.Printf("failed exec withdrawal in transaction %d: %s \n", t.transactionNum, err)
+	}
 	return
 }
 
