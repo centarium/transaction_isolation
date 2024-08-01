@@ -12,6 +12,12 @@ import (
 func DirtyRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Dirty read -----------------")
 
+	defer func() {
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s \n", err)
+		}
+	}()
+
 	var tx1 *helper.Transaction
 	if tx1, err = helper.CreateTransaction(ctx, db, txLevel, 1, dbName); err != nil {
 		return

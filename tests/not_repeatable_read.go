@@ -10,10 +10,16 @@ import (
 	"time"
 )
 
-// NotRepeatableRead - start transaction, read invoice,
+// NonRepeatableRead - start transaction, read invoice,
 // then update invoice outside of transaction - transaction can see changes.
-func NotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
-	fmt.Println("----------------Not repeatable read-----------------")
+func NonRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
+	fmt.Println("----------------Nonrepeatable read-----------------")
+
+	defer func() {
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		}
+	}()
 
 	group, _ := errgroup.WithContext(ctx)
 	group.Go(func() error {
@@ -61,7 +67,7 @@ func NotRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLe
 
 	err = group.Wait()
 	if err != nil {
-		fmt.Printf("waitgroup error: %s", err)
+		fmt.Printf("waitgroup error: %s\n", err)
 		return
 	}
 	return

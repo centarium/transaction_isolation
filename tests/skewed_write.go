@@ -13,6 +13,12 @@ import (
 func TestWithdrawal(db *sqlx.DB, dbName string) (err error) {
 	fmt.Println("----------------Withdrawal-----------------")
 
+	defer func() {
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		}
+	}()
+
 	if err = helper.CreateInvoice(db, 2); err != nil {
 		return err
 	}
@@ -34,6 +40,12 @@ func TestWithdrawal(db *sqlx.DB, dbName string) (err error) {
 
 func TestSkewedWriteWithdrawal(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Skewed Write Withdrawal-----------------")
+
+	defer func() {
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		}
+	}()
 
 	if err = helper.CreateInvoice(db, 2); err != nil {
 		return err

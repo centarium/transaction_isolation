@@ -14,6 +14,12 @@ import (
 func ShareLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Shared locks -----------------")
 
+	defer func() {
+		if errRefill := helper.DropAndCreateInvoice(db, dbName); errRefill != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", errRefill)
+		}
+	}()
+
 	group, _ := errgroup.WithContext(ctx)
 	group.Go(func() error {
 		var tx1 *helper.Transaction
@@ -57,7 +63,7 @@ func ShareLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, db
 
 	err = group.Wait()
 	if err != nil {
-		fmt.Printf("waitgroup error: %s", err)
+		fmt.Printf("waitgroup error: %s\n", err)
 		return
 	}
 

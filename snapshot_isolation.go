@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/centarium/transaction_isolation/helper"
 	"github.com/centarium/transaction_isolation/tests"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +24,6 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	db, err := CreateInvoices(dbName)
 	if err != nil {
 		fmt.Printf("failed to create invoices: %s", err)
-		return
 	}
 
 	ctx := context.Background()
@@ -33,48 +31,28 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	txLevel := sql.LevelSnapshot
 
 	//sqlserver: Snapshot isolation transaction aborted due to update conflict
-	/*if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
+	if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestLostUpdate error: %s", err)
-		return
-	}*/
-
-	/*if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
 	}
 
 	//	sqlserver: 1000, tx1: 1000, tx2 commit, then tx1 commit
-	if err = tests.NotRepeatableRead(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("NotRepeatableRead error: %s", err)
-		return
-	}
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
+	if err = tests.NonRepeatableRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("NonRepeatableRead error: %s", err)
 	}
 
 	//	sqlserver: 1000, 1000
-	if err = tests.TestPhantomRead(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("NotRepeatableRead error: %s", err)
-		return
-	}*/
+	if err = tests.TestPhantom(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestPhantom error: %s", err)
+	}
 
 	//	sqlserver: 0
 	if err = tests.TestSkewedWriteWithdrawal(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestSkewedWriteWithdrawal error: %s", err)
-		return
-	}
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
 	}
 
 	//	sqlserver: 1000
 	if err = tests.TestWithdrawal(db, dbName); err != nil {
 		fmt.Printf("TestWithdrawal error: %s", err)
-		return
 	}
 
 	return

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/centarium/transaction_isolation/helper"
 	"github.com/centarium/transaction_isolation/tests"
 	"github.com/spf13/cobra"
 )
@@ -37,13 +36,7 @@ func ReadUncommittedIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	//sqlserver: 1500
 	//oracle: - error - not supported
 	if err = tests.DirtyRead(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("DirtyRead error: %s", err)
-		return
-	}
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
+		fmt.Printf("DirtyRead error: %s \n", err)
 	}
 
 	//mysql: Deadlock found
@@ -51,13 +44,8 @@ func ReadUncommittedIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	//sqlserver: Transaction was deadlocked
 	//oracle: - error - not supported
 	if err = tests.ShareLocks(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("ShareLocks error: %s", err)
-		return
-	}
-
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
-		return
+		fmt.Printf("ShareLocks error: %s \n", err)
+		err = nil
 	}
 
 	return

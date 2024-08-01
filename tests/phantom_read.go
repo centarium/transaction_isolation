@@ -11,11 +11,13 @@ import (
 	"time"
 )
 
-func TestPhantomRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
-	fmt.Println("----------------Phantom Read-----------------")
+func TestPhantom(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
+	fmt.Println("----------------Phantom-----------------")
 
 	defer func() {
-		helper.TruncateInvoices(db, dbName)
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		}
 	}()
 
 	group, _ := errgroup.WithContext(ctx)

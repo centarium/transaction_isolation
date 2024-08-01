@@ -13,6 +13,12 @@ import (
 func TestSelectForUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Select For Update to prevent lost update-----------------")
 
+	defer func() {
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		}
+	}()
+
 	//print current invoice sum
 	//1000
 	if err = helper.PrintAmount(db); err != nil {
@@ -70,7 +76,7 @@ func TestSelectForUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.Isolation
 
 	err = group.Wait()
 	if err != nil {
-		fmt.Printf("waitgroup error: %s", err)
+		fmt.Printf("waitgroup error: %s\n", err)
 		return
 	}
 
@@ -85,6 +91,12 @@ func TestSelectForUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.Isolation
 
 func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Lost Update-----------------")
+
+	defer func() {
+		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		}
+	}()
 
 	//print current invoice sum
 	if err = helper.PrintAmount(db); err != nil {
