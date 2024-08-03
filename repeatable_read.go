@@ -71,16 +71,6 @@ func RepeatableReadCmd(_ *cobra.Command, args []string) (err error) {
 	}
 
 	/*
-		postgres: 1000
-		mysql: 1000
-		oracle: 1000
-		sqlserver: 1000
-	*/
-	if err = tests.TestWithdrawal(db, dbName); err != nil {
-		fmt.Printf("TestWithdrawal error: %s", err)
-	}
-
-	/*
 		if err = TestSerializationAnomaly(ctx, db, txLevel); err != nil {
 			fmt.Printf("TestSerializationAnomaly error: %s", err)
 			return

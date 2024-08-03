@@ -34,6 +34,14 @@ func SerializableCmd(_ *cobra.Command, args []string) (err error) {
 
 	txLevel := sql.LevelSerializable
 
+	//mysql: 1000
+	//postgres: 1000
+	//sqlserver: block(without READ_COMMITTED_SNAPSHOT  ON;)
+	//oracle: 1000
+	if err = tests.DirtyRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("DirtyRead error: %s \n", err)
+	}
+
 	if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestLostUpdateBetweenTransactionAndTransactionReadAndUpdate error: %s", err)
 	}
@@ -56,16 +64,6 @@ func SerializableCmd(_ *cobra.Command, args []string) (err error) {
 	*/
 	if err = tests.TestSkewedWriteWithdrawal(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestSkewedWriteWithdrawal error: %s", err)
-	}
-
-	/*
-		postgres: 1000
-		mysql: 1000
-		oracle: 1000
-		sqlserver: 1000
-	*/
-	if err = tests.TestWithdrawal(db, dbName); err != nil {
-		fmt.Printf("TestWithdrawal error: %s", err)
 	}
 
 	return

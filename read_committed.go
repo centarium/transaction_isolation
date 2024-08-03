@@ -95,15 +95,5 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 		fmt.Printf("TestSkewedWriteWithdrawal error: %s \n", err)
 	}
 
-	/*
-		postgres: 1000
-		mysql: 1000
-		oracle: 1000
-		sqlserver: 1000
-	*/
-	if err = tests.TestWithdrawal(db, dbName); err != nil {
-		fmt.Printf("TestWithdrawal error: %s", err)
-	}
-
 	return
 }
