@@ -10,34 +10,6 @@ import (
 	"time"
 )
 
-func TestWithdrawal(db *sqlx.DB, dbName string) (err error) {
-	fmt.Println("----------------Withdrawal-----------------")
-
-	defer func() {
-		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
-		}
-	}()
-
-	if err = helper.CreateInvoice(db, 2); err != nil {
-		return err
-	}
-	defer func() {
-		helper.TruncateInvoices(db, dbName)
-	}()
-
-	if err = helper.Withdrawal(db, 1, dbName); err != nil {
-		fmt.Printf("Withdrawal 1 error: %s \n", err)
-		return err
-	}
-	if err = helper.Withdrawal(db, 2, dbName); err != nil {
-		fmt.Printf("Withdrawal 2 error: %s \n", err)
-		return err
-	}
-
-	return helper.PrintUserInvoicesSum(db, 1)
-}
-
 func TestSkewedWriteWithdrawal(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Skewed Write Withdrawal-----------------")
 

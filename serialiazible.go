@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/centarium/transaction_isolation/tests"
 	"github.com/spf13/cobra"
+	"time"
 )
 
 // full serialization - consequential perform of transactions
@@ -31,14 +32,17 @@ func SerializableCmd(_ *cobra.Command, args []string) (err error) {
 	}
 
 	ctx := context.Background()
-
 	txLevel := sql.LevelSerializable
 
-	//mysql: 1000
+	//mysql: Lock wait timeout exceeded
 	//postgres: 1000
 	//sqlserver: block(without READ_COMMITTED_SNAPSHOT  ON;)
 	//oracle: 1000
-	if err = tests.DirtyRead(ctx, db, txLevel, dbName); err != nil {
+	childCtx, cancelFunc := context.WithTimeout(context.Background(), time.Second*3)
+	defer func() {
+		cancelFunc()
+	}()
+	if err = tests.DirtyRead(childCtx, db, txLevel, dbName); err != nil {
 		fmt.Printf("DirtyRead error: %s \n", err)
 	}
 

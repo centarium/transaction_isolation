@@ -50,10 +50,5 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 		fmt.Printf("TestSkewedWriteWithdrawal error: %s", err)
 	}
 
-	//	sqlserver: 1000
-	if err = tests.TestWithdrawal(db, dbName); err != nil {
-		fmt.Printf("TestWithdrawal error: %s", err)
-	}
-
 	return
 }
