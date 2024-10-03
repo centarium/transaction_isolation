@@ -44,8 +44,8 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 	//postgres: 1000
 	//sqlserver: block(without READ_COMMITTED_SNAPSHOT  ON;)
 	//oracle: 1000
-	if err = tests.DirtyRead(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("DirtyRead error: %s \n", err)
+	if err = tests.TestDirtyRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestDirtyRead error: %s \n", err)
 	}
 
 	//mysql: 1500
@@ -70,8 +70,8 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 		sqlserver: 1000, 1500
 		oracle: 1000, 1500
 	*/
-	if err = tests.NonRepeatableRead(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("NonRepeatableRead error: %s \n", err)
+	if err = tests.TestNonRepeatableRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestNonRepeatableRead error: %s \n", err)
 	}
 
 	/*
@@ -81,7 +81,7 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 		oracle: 1000, 2000
 	*/
 	if err = tests.TestPhantom(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("NonRepeatableRead error: %s \n", err)
+		fmt.Printf("TestNonRepeatableRead error: %s \n", err)
 		return
 	}
 

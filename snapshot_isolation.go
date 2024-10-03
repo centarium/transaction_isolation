@@ -36,8 +36,8 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	}
 
 	//	sqlserver: 1000, tx1: 1000, tx2 commit, then tx1 commit
-	if err = tests.NonRepeatableRead(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("NonRepeatableRead error: %s", err)
+	if err = tests.TestNonRepeatableRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestNonRepeatableRead error: %s", err)
 	}
 
 	//	sqlserver: 1000, 1000

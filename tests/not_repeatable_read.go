@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-// NonRepeatableRead - start transaction, read invoice,
+// TestNonRepeatableRead - start transaction, read invoice,
 // then update invoice outside of transaction - transaction can see changes.
-func NonRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
+func TestNonRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Nonrepeatable read-----------------")
 
 	defer func() {

@@ -46,8 +46,8 @@ func RepeatableReadCmd(_ *cobra.Command, args []string) (err error) {
 		sqlserver: 1000, tx1: 1000, tx1 commit, then tx2 commit(!)
 		oracle: error - isolation level not supported
 	*/
-	if err = tests.NonRepeatableRead(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("NonRepeatableRead error: %s", err)
+	if err = tests.TestNonRepeatableRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestNonRepeatableRead error: %s", err)
 	}
 
 	/*

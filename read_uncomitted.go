@@ -35,16 +35,16 @@ func ReadUncommittedIsolationCmd(_ *cobra.Command, args []string) (err error) {
 	//postgres: 1000 - as read committed
 	//sqlserver: 1500
 	//oracle: - error - not supported
-	if err = tests.DirtyRead(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("DirtyRead error: %s \n", err)
+	if err = tests.TestDirtyRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestDirtyRead error: %s \n", err)
 	}
 
 	//mysql: Deadlock found
 	//postgres: deadlock detected
 	//sqlserver: Transaction was deadlocked
 	//oracle: - error - not supported
-	if err = tests.ShareLocks(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("ShareLocks error: %s \n", err)
+	if err = tests.TestSharedLocks(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestSharedLocks error: %s \n", err)
 		err = nil
 	}
 

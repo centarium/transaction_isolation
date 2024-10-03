@@ -8,8 +8,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// DirtyRead - update not committed transaction - outside transaction queries can see this update
-func DirtyRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
+// TestDirtyRead - update not committed transaction - outside transaction queries can see this update
+func TestDirtyRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Dirty read -----------------")
 
 	defer func() {

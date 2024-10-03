@@ -34,30 +34,50 @@ func SerializableCmd(_ *cobra.Command, args []string) (err error) {
 	ctx := context.Background()
 	txLevel := sql.LevelSerializable
 
-	//mysql: Lock wait timeout exceeded
-	//postgres: 1000
-	//sqlserver: block(without READ_COMMITTED_SNAPSHOT  ON;)
-	//oracle: 1000
-	childCtx, cancelFunc := context.WithTimeout(context.Background(), time.Second*3)
+	/*
+		mysql: Lock wait timeout exceeded
+		postgres: commit
+		sqlserver: lock
+		oracle: commit
+	*/
+	if err = tests.TestSerializableSelectPlusUpdateLocks(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestSerializableSelectPlusUpdateLocks error: %s \n", err)
+	}
+
+	childCtx, cancelFunc := context.WithTimeout(ctx, time.Second*3)
 	defer func() {
 		cancelFunc()
 	}()
-	if err = tests.DirtyRead(childCtx, db, txLevel, dbName); err != nil {
-		fmt.Printf("DirtyRead error: %s \n", err)
+	//mysql: Lock wait timeout exceeded
+	//postgres: 1000
+	//sqlserver: lock
+	//oracle: 1000
+	if err = tests.TestDirtyRead(childCtx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestDirtyRead error: %s \n", err)
 	}
 
+	//mysql: Lock
+	//postgres: 1000
+	//sqlserver: lock
+	//oracle: 1000
 	if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestLostUpdateBetweenTransactionAndTransactionReadAndUpdate error: %s", err)
 	}
 
+	//mysql: deadlock found
+	//postgres: could not serialize access
+	//sqlserver: lock
 	//oracle: 1000, 1000
 	if err = tests.TestPhantom(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestPhantom error: %s", err)
 	}
 
+	//mysql: 1000, 1000
+	//postgres: 1000, 1000
+	//sqlserver: 1000, 1000
 	//oracle: 1000, tx1: 1000, tx2 commit, then tx1 commit
-	if err = tests.NonRepeatableRead(ctx, db, txLevel, dbName); err != nil {
-		fmt.Printf("Serializable NonRepeatableRead error: %s", err)
+	if err = tests.TestNonRepeatableRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("Serializable TestNonRepeatableRead error: %s", err)
 	}
 
 	/*
