@@ -70,11 +70,5 @@ func RepeatableReadCmd(_ *cobra.Command, args []string) (err error) {
 		fmt.Printf("TestSkewedWriteWithdrawal error: %s", err)
 	}
 
-	/*
-		if err = TestSerializationAnomaly(ctx, db, txLevel); err != nil {
-			fmt.Printf("TestSerializationAnomaly error: %s", err)
-			return
-		}
-	*/
 	return
 }

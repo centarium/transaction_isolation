@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
-	fmt.Println("----------------Lost Update-----------------")
+func TestSelectForUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
+	fmt.Println("----------------Select For Update to prevent lost update-----------------")
 
 	defer func() {
 		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
@@ -20,6 +20,7 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 	}()
 
 	//print current invoice sum
+	//1000
 	if err = helper.PrintAmount(db); err != nil {
 		return
 	}
@@ -36,22 +37,21 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 		}()
 
 		var invoiceSum int64
-		if invoiceSum, err = tx1.GetAmount(); err != nil {
+		//lock for update
+		if invoiceSum, err = tx1.GetAmountWithExclusiveLock(); err != nil {
 			return err
 		}
-		time.Sleep(time.Millisecond * 150)
 
+		time.Sleep(time.Millisecond * 150)
 		//update invoice in transaction 1
 		if err = tx1.UpdateInvoice(invoiceSum+500, false); err != nil {
 			return err
 		}
-		//time.Sleep(time.Millisecond * 100)
 
 		return nil
 	})
 
 	group.Go(func() error {
-
 		var tx2 *helper.Transaction
 		if tx2, err = helper.CreateTransaction(ctx, db, txLevel, 2, dbName); err != nil {
 			return err
@@ -60,12 +60,11 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 			tx2.Close(err)
 		}()
 
+		time.Sleep(time.Millisecond * 100)
 		var invoiceSum int64
-		if invoiceSum, err = tx2.GetAmount(); err != nil {
+		if invoiceSum, err = tx2.GetAmountWithExclusiveLock(); err != nil {
 			return err
 		}
-
-		time.Sleep(time.Millisecond * 100)
 
 		//update invoice in transaction 2
 		if err = tx2.UpdateInvoice(invoiceSum+200, false); err != nil {
@@ -82,6 +81,7 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 	}
 
 	//print current invoice sum
+	//must be 1700
 	if err = helper.PrintAmount(db); err != nil {
 		return
 	}

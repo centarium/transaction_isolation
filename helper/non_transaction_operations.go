@@ -79,33 +79,3 @@ func PrintUserInvoicesSum(db *sqlx.DB, userId int) (err error) {
 	fmt.Printf("User invoices sum: %d \n", invoiceSum)
 	return
 }
-
-func Withdrawal(db *sqlx.DB, invoiceId int, dbName string) (err error) {
-	if dbName == "mysql" {
-		querySetTotalAmount := `
-			SELECT SUM(amount) INTO @total_amount FROM transaction_isolation.invoices WHERE user_id = 1;
-		`
-		if _, err = db.Exec(querySetTotalAmount); err != nil {
-			fmt.Printf("failed set @total_amount: %s \n", err)
-		}
-		queryUpdate := fmt.Sprintf(`
-			UPDATE invoices
-			SET amount = amount - 1000
-			WHERE id = %d AND amount >= 1000 AND @total_amount >= 2000
-		`, invoiceId)
-		if _, err = db.Exec(queryUpdate); err != nil {
-			fmt.Printf("failed update amount: %s \n", err)
-		}
-
-		return
-	}
-
-	query := fmt.Sprintf(`UPDATE invoices SET amount = amount-1000 WHERE id = %d AND amount >=1000 AND  (
-      			SELECT SUM(amount) FROM invoices WHERE user_id = 1
-		) >= 2000`, invoiceId)
-
-	if _, err = db.Exec(query); err != nil {
-		fmt.Printf("failed exec withdrawal %s \n", err)
-	}
-	return
-}
