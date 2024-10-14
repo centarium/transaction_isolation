@@ -13,7 +13,8 @@ var (
 		Use:     "<isolation_level> <database>",
 		Example: "read_committed postgres",
 		//<database>: "postgres", "mysql", "oracle", "sqlserver"
-		ValidArgs: []string{"read_uncommitted <database>", "read_committed <database>", "snapshot_isolation <database>"},
+		ValidArgs: []string{"read_uncommitted <database>", "read_committed <database>",
+			"snapshot_isolation <database>", "serializable <database>"},
 	}
 )
 
