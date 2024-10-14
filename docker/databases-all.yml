@@ -1,0 +1,51 @@
+version: "3"
+services:
+  postgres:
+    build:
+      context: ./Dockerfiles/postgres
+    container_name: postgres_server
+    user: "{user}:{user}"
+    environment:
+      POSTGRES_PASSWORD: "{password}"
+      POSTGRES_USER: admin
+    ports:
+      - "5432:5432"                
+    volumes: 
+      - ./postgres-conf:/var/lib/postgresql/data      
+
+  mysql:
+    build:
+      context: ./Dockerfiles/mysql
+    container_name: mysql_server
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "{password}"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+
+  mssql:
+    build:
+      context: ./Dockerfiles/mssql
+    container_name: sql_server
+    user: "{user}:{user}"
+    ports:
+      - "1433:1433"
+    environment:
+      SA_PASSWORD: "{password}"
+      ACCEPT_EULA: "Y"
+    volumes:
+      - ./mssql_data:/var/opt/mssql
+
+  oracle:
+    build:
+      context: ./Dockerfiles/oracle
+    container_name: oracle_server
+    user: "oracle:{user}"
+    ports:
+      - "1521:1521"     
+    environment:
+      ORACLE_SID: oracle	
+      ORACLE_PWD: "{password}"
+    volumes:
+      - ./oracle_data:/opt/oracle/oradata

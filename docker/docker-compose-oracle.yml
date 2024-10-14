@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  oracle:
+    build:
+      context: ./Dockerfiles/oracle
+    container_name: oracle_server
+    user: "oracle:user"
+    ports:
+      - "1521:1521"     
+    environment:
+      ORACLE_SID: oracle	
+      ORACLE_PWD: "admin"
+    volumes:
+      - ./oracle_data:/opt/oracle/oradata
