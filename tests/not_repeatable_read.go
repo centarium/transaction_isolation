@@ -56,7 +56,7 @@ func TestNonRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.Isolati
 		time.Sleep(time.Millisecond * 100)
 
 		//update invoice in transaction 2
-		if err = tx2.UpdateInvoice(1500, false); err != nil {
+		if err = tx2.UpdateInvoice(1500); err != nil {
 			return err
 		}
 

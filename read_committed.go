@@ -8,15 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// read committed prevents dirty read and dirty write isolation artefacts
-// dirty read - transaction two read changes of not yet ended transaction one,
-// then transaction one interrupts, transaction two continue work with non-actual data
-// dirty write - provide atomic state for sequential update one record by multiple transaction
-// for example, Alice and Bob want to buy one car. This leads to compete queries in two tables -
-// invoices and car_owners. Correct situation - Alice was first, she became a car owner and get
-// an invoice. Bob couldn't buy car. Incorrect situation due to race condition - Alice was first
-// in invoices table, but second in car_owners table - leads to situation when Bob become car owner,
-// but invoice was sent to Alice
 var readCommitted = &cobra.Command{
 	Use:   "read_committed <database>",
 	Short: "Read committed demonstration",

@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	//test 3 parameters - isolation level, database, anomaly
+	//2 parameters - isolation level, database
 	rootCmd = &cobra.Command{
 		Use:     "<isolation_level> <database>",
 		Example: "read_committed postgres",

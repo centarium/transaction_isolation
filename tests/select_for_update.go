@@ -44,7 +44,7 @@ func TestSelectForUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.Isolation
 
 		time.Sleep(time.Millisecond * 150)
 		//update invoice in transaction 1
-		if err = tx1.UpdateInvoice(invoiceSum+500, false); err != nil {
+		if err = tx1.UpdateInvoice(invoiceSum + 500); err != nil {
 			return err
 		}
 
@@ -67,7 +67,7 @@ func TestSelectForUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.Isolation
 		}
 
 		//update invoice in transaction 2
-		if err = tx2.UpdateInvoice(invoiceSum+200, false); err != nil {
+		if err = tx2.UpdateInvoice(invoiceSum + 200); err != nil {
 			return err
 		}
 

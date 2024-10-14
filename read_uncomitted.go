@@ -14,7 +14,6 @@ var readUncomittedIsolationCmd = &cobra.Command{
 	RunE:  ReadUncommittedIsolationCmd,
 }
 
-// Command init function.
 func init() {
 	rootCmd.AddCommand(readUncomittedIsolationCmd)
 }

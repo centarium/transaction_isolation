@@ -183,13 +183,10 @@ func (t *Transaction) UpdateInvoiceId(newAmount int64, isIncrement bool) (err er
 	return
 }
 
-func (t *Transaction) UpdateInvoice(newAmount int64, isIncrement bool) (err error) {
+func (t *Transaction) UpdateInvoice(newAmount int64) (err error) {
 	fmt.Printf("Update invoice amount in transaction %d to %d \n", t.transactionNum, newAmount)
 
 	queryLeftSide := `UPDATE invoices SET amount = `
-	if isIncrement {
-		queryLeftSide += `amount + `
-	}
 
 	var query string
 	switch t.dbName {

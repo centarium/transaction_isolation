@@ -35,7 +35,7 @@ func TestSharedLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLeve
 		}
 		time.Sleep(time.Millisecond * 100)
 
-		if err = tx1.UpdateInvoice(1500, false); err != nil {
+		if err = tx1.UpdateInvoice(1500); err != nil {
 			return err
 		}
 		return err
@@ -55,7 +55,7 @@ func TestSharedLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLeve
 		}
 		time.Sleep(time.Millisecond * 100)
 
-		if err = tx2.UpdateInvoice(1500, false); err != nil {
+		if err = tx2.UpdateInvoice(1500); err != nil {
 			return err
 		}
 		return err
@@ -95,7 +95,7 @@ func TestSerializableSelectPlusUpdateLocks(ctx context.Context, db *sqlx.DB, txL
 		}
 		time.Sleep(time.Millisecond * 100)
 
-		if err = tx1.UpdateInvoice(1500, false); err != nil {
+		if err = tx1.UpdateInvoice(1500); err != nil {
 			return err
 		}
 		return err
@@ -115,7 +115,7 @@ func TestSerializableSelectPlusUpdateLocks(ctx context.Context, db *sqlx.DB, txL
 		}
 		time.Sleep(time.Millisecond * 100)
 
-		if err = tx2.UpdateInvoice(1500, false); err != nil {
+		if err = tx2.UpdateInvoice(1500); err != nil {
 			return err
 		}
 		return err

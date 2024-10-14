@@ -16,7 +16,7 @@ var initDbCmd = &cobra.Command{
 	Example:   "init_db postgres",
 	Short:     "Init database",
 	RunE:      InitDBCmd,
-	ValidArgs: []string{"postgres", "mysql", "sqlserver"},
+	ValidArgs: []string{"postgres", "mysql", "sqlserver", "oracle"},
 }
 
 // Command init function.
