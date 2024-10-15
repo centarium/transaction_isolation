@@ -1,20 +1,21 @@
 version: "3"
 services:
   postgres:
-    build:
-      context: ./Dockerfiles/postgres
-    user: "user:user"
+    image: postgres:15
     networks:
       - postgres
     environment:
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_PASSWORD: admin
       POSTGRES_USER: admin
     ports:
-      - "5432:5432"                
-    volumes: 
-      - ./postgres-conf:/var/lib/postgresql/data      
+      - "5432:5432"
+    volumes:
+      - ./postgres-conf:/var/lib/postgresql/data
 
 networks:
   postgres:
     name: postgres
     driver: bridge
+volumes:
+  postgres-conf:
+    driver: local

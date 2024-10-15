@@ -1,12 +1,10 @@
 version: "3"
 services:
   postgres:
-    build:
-      context: ./Dockerfiles/postgres
+    image: postgres:15
     container_name: postgres_server
-    user: "{user}:{user}"
     environment:
-      POSTGRES_PASSWORD: "{password}"
+      POSTGRES_PASSWORD: "admin"
       POSTGRES_USER: admin
     ports:
       - "5432:5432"                
@@ -14,38 +12,43 @@ services:
       - ./postgres-conf:/var/lib/postgresql/data      
 
   mysql:
-    build:
-      context: ./Dockerfiles/mysql
+    image: mysql:latest
     container_name: mysql_server
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: "{password}"
+      MYSQL_ROOT_PASSWORD: "admin"
     volumes:
       - ./mysql_data:/var/lib/mysql
 
   mssql:
-    build:
-      context: ./Dockerfiles/mssql
+    image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sql_server
-    user: "{user}:{user}"
     ports:
       - "1433:1433"
     environment:
-      SA_PASSWORD: "{password}"
+      SA_PASSWORD: "Admin987"
       ACCEPT_EULA: "Y"
     volumes:
       - ./mssql_data:/var/opt/mssql
 
   oracle:
-    build:
-      context: ./Dockerfiles/oracle
+    image: container-registry.oracle.com/database/enterprise:latest
     container_name: oracle_server
-    user: "oracle:{user}"
     ports:
       - "1521:1521"     
     environment:
       ORACLE_SID: oracle	
-      ORACLE_PWD: "{password}"
+      ORACLE_PWD: "Admin987"
     volumes:
       - ./oracle_data:/opt/oracle/oradata
+
+networks:
+  postgres:
+    name: postgres
+    driver: bridge
+volumes:
+  postgres-conf:
+    driver: local
+  mysql_data:
+    driver: local

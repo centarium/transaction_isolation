@@ -27,42 +27,42 @@ func init() {
 const DB = "transaction_isolation"
 
 func GetInitPostgresConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("pgx", "postgres://admin:1234@localhost:5432/postgres?connect_timeout=5&sslmode=disable&search_path=public")
+	db, err = sqlx.Connect("pgx", "postgres://admin:admin@localhost:5432/postgres?connect_timeout=5&sslmode=disable&search_path=public")
 	return
 }
 
 func GetInitMySQLConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("mysql", "root:MySQL123@(localhost:3306)/mysql")
+	db, err = sqlx.Connect("mysql", "root:admin@(localhost:3306)/mysql")
 	return
 }
 
 func GetDBMysqlConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("mysql", "root:MySQL123@(localhost:3306)/"+DB)
+	db, err = sqlx.Connect("mysql", "root:admin@(localhost:3306)/"+DB)
 	return
 }
 
 func GetInitSQLServerConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("sqlserver", "sqlserver://sa:admin857GH@localhost:1433/master")
+	db, err = sqlx.Connect("sqlserver", "sqlserver://sa:Admin987@localhost:1433/master")
 	return
 }
 
 func GetDBSQLServerConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("sqlserver", "sqlserver://sa:admin857GH@localhost:1433/"+DB)
+	db, err = sqlx.Connect("sqlserver", "sqlserver://sa:Admin987@localhost:1433/"+DB)
 	return
 }
 
 func GetDBPostgresConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("pgx", "postgres://admin:1234@localhost:5432/"+DB+"?connect_timeout=5&sslmode=disable&search_path=public")
+	db, err = sqlx.Connect("pgx", "postgres://admin:admin@localhost:5432/"+DB+"?connect_timeout=5&sslmode=disable&search_path=public")
 	return
 }
 
 func GetInitOracleConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("godror", "SYSTEM/admin857GH@localhost:1521/oracle")
+	db, err = sqlx.Connect("godror", "SYSTEM/Admin987@localhost:1521/oracle")
 	return
 }
 
 func GetDBOracleConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("godror", "SYSTEM/admin857GH@localhost:1521/oracle")
+	db, err = sqlx.Connect("godror", "SYSTEM/Admin987@localhost:1521/oracle")
 	return
 }
 

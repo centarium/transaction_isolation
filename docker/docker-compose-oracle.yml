@@ -2,14 +2,13 @@ version: '3.7'
 
 services:
   oracle:
-    build:
-      context: ./Dockerfiles/oracle
+    image: container-registry.oracle.com/database/enterprise:latest
     container_name: oracle_server
-    user: "oracle:user"
     ports:
-      - "1521:1521"     
+      - "1521:1521"
     environment:
-      ORACLE_SID: oracle	
-      ORACLE_PWD: "admin"
+      ORACLE_SID: oracle
+      ORACLE_PWD: "Admin987"
     volumes:
       - ./oracle_data:/opt/oracle/oradata
+    #sudo chown -R 54321:54321 oracle_data/

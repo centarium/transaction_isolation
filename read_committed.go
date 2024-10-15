@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/centarium/transaction_isolation/tests"
 	"github.com/spf13/cobra"
+	"time"
 )
 
 var readCommitted = &cobra.Command{
@@ -31,11 +32,26 @@ func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 
 	txLevel := sql.LevelReadCommitted
 
+	/*_, err = db.Exec("ALTER DATABASE " + DB + " SET READ_COMMITTED_SNAPSHOT ON")
+	if err != nil {
+		fmt.Printf("Set READ_COMMITTED_SNAPSHOT ON %s error: %s \n", DB, err)
+		return
+	}*/
+	/*_, err = db.Exec("ALTER DATABASE " + dbName + " SET READ_COMMITTED_SNAPSHOT OFF")
+	if err != nil {
+		fmt.Printf("Set READ_COMMITTED_SNAPSHOT OFF error: %s \n", err)
+	}*/
+
+	childCtx, cancelFunc := context.WithTimeout(ctx, time.Second*3)
+	defer func() {
+		cancelFunc()
+	}()
+
 	//mysql: 1000
 	//postgres: 1000
 	//sqlserver: block(without READ_COMMITTED_SNAPSHOT  ON;)
 	//oracle: 1000
-	if err = tests.TestDirtyRead(ctx, db, txLevel, dbName); err != nil {
+	if err = tests.TestDirtyRead(childCtx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestDirtyRead error: %s \n", err)
 	}
 
