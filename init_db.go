@@ -47,7 +47,7 @@ func GetInitSQLServerConnection() (db *sqlx.DB, err error) {
 }
 
 func GetDBSQLServerConnection() (db *sqlx.DB, err error) {
-	db, err = sqlx.Connect("sqlserver", "sqlserver://sa:Admin987@localhost:1433/"+DB)
+	db, err = sqlx.Connect("sqlserver", "sqlserver://sa:Admin987@localhost:1433?database="+DB)
 	return
 }
 
