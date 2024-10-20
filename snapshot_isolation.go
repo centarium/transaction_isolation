@@ -9,9 +9,9 @@ import (
 )
 
 var snapshotIsolationCmd = &cobra.Command{
-	Use:   "snapshot_isolation",
-	Short: "Snapshot Isolation demonstration(based on MVCC - in sql server)",
-	RunE:  SnapshotIsolationCmd,
+	Use:   "snapshot",
+	Short: "Snapshot Isolation Level demonstration(based on MVCC in sql server)",
+	RunE:  SnapshotCmd,
 }
 
 // Command init function.
@@ -19,7 +19,7 @@ func init() {
 	rootCmd.AddCommand(snapshotIsolationCmd)
 }
 
-func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
+func SnapshotCmd(_ *cobra.Command, args []string) (err error) {
 	dbName := GetDbName(args)
 	db, err := CreateInvoices(dbName)
 	if err != nil {
@@ -30,6 +30,11 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 
 	txLevel := sql.LevelSnapshot
 
+	if _, err = db.Exec("ALTER DATABASE " + DB + " SET ALLOW_SNAPSHOT_ISOLATION ON"); err != nil {
+		fmt.Printf("Snapshot isolation on error: %s", err)
+		return
+	}
+
 	//sqlserver: Snapshot isolation transaction aborted due to update conflict
 	if err = tests.TestLostUpdate(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestLostUpdate error: %s", err)
@@ -37,6 +42,11 @@ func SnapshotIsolationCmd(_ *cobra.Command, args []string) (err error) {
 
 	//	sqlserver: 1000, tx1: 1000, tx2 commit, then tx1 commit
 	if err = tests.TestNonRepeatableRead(ctx, db, txLevel, dbName); err != nil {
+		fmt.Printf("TestNonRepeatableRead error: %s", err)
+	}
+
+	//	sqlserver: 1000, tx1: 1000, tx2 commit, then tx1 commit
+	if err = tests.TestNonRepeatableReadDelete(ctx, db, txLevel, dbName); err != nil {
 		fmt.Printf("TestNonRepeatableRead error: %s", err)
 	}
 

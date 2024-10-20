@@ -16,5 +16,5 @@
 - read_uncommitted
 - read_committed
 - repeatable_read
-- snapshot_isolation
+- snapshot
 - serializable
