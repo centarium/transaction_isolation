@@ -88,3 +88,34 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 
 	return
 }
+
+func MySQLLostUpdateHack(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel,
+	dbName string, InvoiceIdInt, newAmount, version int) (err error) {
+	var tx1 *helper.Transaction
+	if tx1, err = helper.CreateTransaction(ctx, db, txLevel, 1, dbName); err != nil {
+		return err
+	}
+
+	tx := tx1.GetTx()
+
+	query := "UPDATE invoices SET amount = ?, version = version + 1 WHERE id = ? and version = ?"
+	var res sql.Result
+	if res, err = tx.Exec(query, newAmount, InvoiceIdInt, version); err != nil {
+		fmt.Printf("failed to update invoice in transaction with error %s \n")
+		return
+	}
+
+	var rowsAffected int64
+	if rowsAffected, err = res.RowsAffected(); err != nil {
+		fmt.Printf("failed to update invoice in transaction with error %s \n")
+	} else {
+		fmt.Printf("Rows affected: %d", rowsAffected)
+	}
+	if rowsAffected > 0 {
+		tx.Commit()
+	} else {
+		tx.Rollback()
+	}
+
+	return err
+}

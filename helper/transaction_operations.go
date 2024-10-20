@@ -217,6 +217,16 @@ func (t *Transaction) UpdateInvoice(newAmount int64) (err error) {
 	return
 }
 
+func (t *Transaction) DeleteInvoice(invoiceId int) (err error) {
+	if _, err = t.tx.Exec(fmt.Sprintf(
+		fmt.Sprintf("DELETE FROM invoices WHERE id = %d", invoiceId),
+	)); err != nil {
+		fmt.Printf("failed exec delete invoice: %s", err)
+		return
+	}
+	return nil
+}
+
 func CreateTransaction(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, transactionNum int, dbName string) (t *Transaction, err error) {
 	var tx *sqlx.Tx
 	if tx, err = db.BeginTxx(ctx, &sql.TxOptions{
@@ -268,4 +278,8 @@ func (t *Transaction) Rollback() {
 
 	fmt.Printf("Transaction %d rollbacked \n", t.transactionNum)
 	return
+}
+
+func (t *Transaction) GetTx() *sqlx.Tx {
+	return t.tx
 }

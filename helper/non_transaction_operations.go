@@ -62,6 +62,16 @@ func CreateInvoice(db *sqlx.DB, invoiceId int) (err error) {
 	return nil
 }
 
+func DeleteInvoice(db *sqlx.DB, invoiceId int) (err error) {
+	if _, err = db.Exec(fmt.Sprintf(
+		fmt.Sprintf("DELETE FROM invoices WHERE id = %d", invoiceId),
+	)); err != nil {
+		fmt.Printf("failed exec delete invoice: %s", err)
+		return
+	}
+	return nil
+}
+
 func PrintUserInvoicesSum(db *sqlx.DB, userId int) (err error) {
 	row := db.QueryRow(fmt.Sprintf(`Select SUM(amount) from invoices WHERE user_id = %d`, userId))
 
