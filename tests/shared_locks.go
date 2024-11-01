@@ -15,8 +15,8 @@ func TestSharedLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLeve
 	fmt.Println("----------------Shared locks -----------------")
 
 	defer func() {
-		if errRefill := helper.DropAndCreateInvoice(db, dbName); errRefill != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", errRefill)
+		if errRefill := helper.DropAndCreateAccount(db, dbName); errRefill != nil {
+			fmt.Printf("DropAndCreateAccount error: %s", errRefill)
 		}
 	}()
 
@@ -35,7 +35,7 @@ func TestSharedLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLeve
 		}
 		time.Sleep(time.Millisecond * 100)
 
-		if err = tx1.UpdateInvoice(1500); err != nil {
+		if err = tx1.UpdateAccount(1500); err != nil {
 			return err
 		}
 		return err
@@ -55,7 +55,7 @@ func TestSharedLocks(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLeve
 		}
 		time.Sleep(time.Millisecond * 100)
 
-		if err = tx2.UpdateInvoice(1500); err != nil {
+		if err = tx2.UpdateAccount(1500); err != nil {
 			return err
 		}
 		return err
@@ -75,8 +75,8 @@ func TestSerializableSelectPlusUpdateLocks(ctx context.Context, db *sqlx.DB, txL
 	fmt.Println("----------------Serializable Shared locks -----------------")
 
 	defer func() {
-		if errRefill := helper.DropAndCreateInvoice(db, dbName); errRefill != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", errRefill)
+		if errRefill := helper.DropAndCreateAccount(db, dbName); errRefill != nil {
+			fmt.Printf("DropAndCreateAccount error: %s", errRefill)
 		}
 	}()
 
@@ -95,7 +95,7 @@ func TestSerializableSelectPlusUpdateLocks(ctx context.Context, db *sqlx.DB, txL
 		}
 		time.Sleep(time.Millisecond * 100)
 
-		if err = tx1.UpdateInvoice(1500); err != nil {
+		if err = tx1.UpdateAccount(1500); err != nil {
 			return err
 		}
 		return err
@@ -115,7 +115,7 @@ func TestSerializableSelectPlusUpdateLocks(ctx context.Context, db *sqlx.DB, txL
 		}
 		time.Sleep(time.Millisecond * 100)
 
-		if err = tx2.UpdateInvoice(1500); err != nil {
+		if err = tx2.UpdateAccount(1500); err != nil {
 			return err
 		}
 		return err

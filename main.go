@@ -15,7 +15,7 @@ var (
 		//<database>: "postgres", "mysql", "oracle", "sqlserver"
 		ValidArgs: []string{"read_uncommitted <database>", "read_committed <database>",
 			"snapshot <database>", "serializable <database>",
-			"mysql_lost_update_hack <invoice_id> <amount> <version>"},
+			"mysql_lost_update_hack <account_id> <amount> <version>"},
 	}
 )
 

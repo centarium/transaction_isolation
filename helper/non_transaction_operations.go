@@ -6,43 +6,43 @@ import (
 )
 
 func PrintAmount(db *sqlx.DB) (err error) {
-	row := db.QueryRow(`Select amount from invoices WHERE id = ` + InvoiceIdStr)
+	row := db.QueryRow(`Select amount from accounts WHERE id = ` + AccountIdStr)
 
 	if err = row.Err(); err != nil {
 		fmt.Printf("failed select account: %s\n", err)
 		return
 	}
 
-	var invoiceSum int64
-	if err = row.Scan(&invoiceSum); err != nil {
+	var accountSum int64
+	if err = row.Scan(&accountSum); err != nil {
 		fmt.Printf("failed to scan account: %s\n", err)
 		return
 	}
 
-	fmt.Printf("Account sum: %d \n", invoiceSum)
+	fmt.Printf("Account sum: %d \n", accountSum)
 	return
 }
 
-func DropAndCreateInvoice(db *sqlx.DB, dbName string) (err error) {
-	if err = TruncateInvoices(db, dbName); err != nil {
+func DropAndCreateAccount(db *sqlx.DB, dbName string) (err error) {
+	if err = TruncateAccounts(db, dbName); err != nil {
 		return err
 	}
 
 	//create account for tests
-	if err = CreateInvoice(db, InvoiceIdInt); err != nil {
+	if err = CreateAccount(db, AccountIdInt); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func TruncateInvoices(db *sqlx.DB, dbName string) (err error) {
-	truncateString := `TRUNCATE invoices`
+func TruncateAccounts(db *sqlx.DB, dbName string) (err error) {
+	truncateString := `TRUNCATE accounts`
 	switch dbName {
 	case "sqlserver":
-		truncateString = `TRUNCATE table invoices`
+		truncateString = `TRUNCATE table accounts`
 	case "oracle":
-		truncateString = `TRUNCATE table SYSTEM.invoices`
+		truncateString = `TRUNCATE table SYSTEM.accounts`
 	}
 
 	if _, err = db.Exec(truncateString); err != nil {
@@ -52,19 +52,19 @@ func TruncateInvoices(db *sqlx.DB, dbName string) (err error) {
 	return nil
 }
 
-func CreateInvoice(db *sqlx.DB, invoiceId int) (err error) {
+func CreateAccount(db *sqlx.DB, accountId int) (err error) {
 	if _, err = db.Exec(fmt.Sprintf(
-		"INSERT  into invoices(id, user_id, amount) VALUES (%d, 1, 1000)", invoiceId,
+		"INSERT  into accounts(id, user_id, amount) VALUES (%d, 1, 1000)", accountId,
 	)); err != nil {
-		fmt.Printf("failed exec create invoices: %s", err)
+		fmt.Printf("failed exec create accounts: %s", err)
 		return
 	}
 	return nil
 }
 
-func DeleteInvoice(db *sqlx.DB, invoiceId int) (err error) {
+func DeleteAccount(db *sqlx.DB, accountId int) (err error) {
 	if _, err = db.Exec(fmt.Sprintf(
-		fmt.Sprintf("DELETE FROM invoices WHERE id = %d", invoiceId),
+		fmt.Sprintf("DELETE FROM accounts WHERE id = %d", accountId),
 	)); err != nil {
 		fmt.Printf("failed exec delete account: %s", err)
 		return
@@ -72,20 +72,20 @@ func DeleteInvoice(db *sqlx.DB, invoiceId int) (err error) {
 	return nil
 }
 
-func PrintUserInvoicesSum(db *sqlx.DB, userId int) (err error) {
-	row := db.QueryRow(fmt.Sprintf(`Select SUM(amount) from invoices WHERE user_id = %d`, userId))
+func PrintUserAccountsSum(db *sqlx.DB, userId int) (err error) {
+	row := db.QueryRow(fmt.Sprintf(`Select SUM(amount) from accounts WHERE user_id = %d`, userId))
 
 	if err = row.Err(); err != nil {
 		fmt.Printf("failed select account: %s\n", err)
 		return
 	}
 
-	var invoiceSum int64
-	if err = row.Scan(&invoiceSum); err != nil {
+	var accountSum int64
+	if err = row.Scan(&accountSum); err != nil {
 		fmt.Printf("failed to scan account: %s\n", err)
 		return
 	}
 
-	fmt.Printf("User invoices sum: %d \n", invoiceSum)
+	fmt.Printf("User accounts sum: %d \n", accountSum)
 	return
 }

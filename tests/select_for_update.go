@@ -14,8 +14,8 @@ func TestSelectForUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.Isolation
 	fmt.Println("----------------Select For Update to prevent lost update-----------------")
 
 	defer func() {
-		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		if err = helper.DropAndCreateAccount(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateAccount error: %s", err)
 		}
 	}()
 
@@ -36,15 +36,15 @@ func TestSelectForUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.Isolation
 			tx1.Close(err)
 		}()
 
-		var invoiceSum int64
+		var accountSum int64
 		//lock for update
-		if invoiceSum, err = tx1.GetAmountWithExclusiveLock(); err != nil {
+		if accountSum, err = tx1.GetAmountWithExclusiveLock(); err != nil {
 			return err
 		}
 
 		time.Sleep(time.Millisecond * 150)
 		//update account in transaction 1
-		if err = tx1.UpdateInvoice(invoiceSum + 500); err != nil {
+		if err = tx1.UpdateAccount(accountSum + 500); err != nil {
 			return err
 		}
 
@@ -61,13 +61,13 @@ func TestSelectForUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.Isolation
 		}()
 
 		time.Sleep(time.Millisecond * 100)
-		var invoiceSum int64
-		if invoiceSum, err = tx2.GetAmountWithExclusiveLock(); err != nil {
+		var accountSum int64
+		if accountSum, err = tx2.GetAmountWithExclusiveLock(); err != nil {
 			return err
 		}
 
 		//update account in transaction 2
-		if err = tx2.UpdateInvoice(invoiceSum + 200); err != nil {
+		if err = tx2.UpdateAccount(accountSum + 200); err != nil {
 			return err
 		}
 

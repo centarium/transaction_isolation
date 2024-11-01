@@ -13,8 +13,8 @@ func TestDirtyRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel,
 	fmt.Println("----------------Dirty read -----------------")
 
 	defer func() {
-		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s \n", err)
+		if err = helper.DropAndCreateAccount(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateAccount error: %s \n", err)
 		}
 	}()
 
@@ -40,7 +40,7 @@ func TestDirtyRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel,
 	}
 
 	//change account amount in tx2: 1000 -> 1500
-	if err = tx2.UpdateInvoice(1500); err != nil {
+	if err = tx2.UpdateAccount(1500); err != nil {
 		return
 	}
 

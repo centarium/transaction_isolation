@@ -15,8 +15,8 @@ func TestPhantom(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, d
 	fmt.Println("----------------Phantom-----------------")
 
 	defer func() {
-		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		if err = helper.DropAndCreateAccount(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateAccount error: %s", err)
 		}
 	}()
 
@@ -30,11 +30,11 @@ func TestPhantom(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, d
 			tx1.Close(err)
 		}()
 
-		if err = tx1.PrintInvoicesSumByUserID(1); err != nil {
+		if err = tx1.PrintAccountsSumByUserID(1); err != nil {
 			return err
 		}
 		time.Sleep(time.Millisecond * 200)
-		if err = tx1.PrintInvoicesSumByUserID(1); err != nil {
+		if err = tx1.PrintAccountsSumByUserID(1); err != nil {
 			return err
 		}
 
@@ -44,7 +44,7 @@ func TestPhantom(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, d
 	group.Go(func() error {
 
 		time.Sleep(time.Millisecond * 100)
-		if err = helper.CreateInvoice(db, 2); err != nil {
+		if err = helper.CreateAccount(db, 2); err != nil {
 			return err
 		}
 		fmt.Println("New account added")

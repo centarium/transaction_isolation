@@ -22,9 +22,9 @@ func init() {
 
 func ReadCommittedCmd(_ *cobra.Command, args []string) (err error) {
 	dbName := GetDbName(args)
-	db, err := CreateInvoices(dbName)
+	db, err := CreateAccounts(dbName)
 	if err != nil {
-		fmt.Printf("failed to create invoices: %s", err)
+		fmt.Printf("failed to create accounts: %s", err)
 		return
 	}
 

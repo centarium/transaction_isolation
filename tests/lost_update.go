@@ -14,8 +14,8 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 	fmt.Println("----------------Lost Update-----------------")
 
 	defer func() {
-		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		if err = helper.DropAndCreateAccount(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateAccount error: %s", err)
 		}
 	}()
 
@@ -35,14 +35,14 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 			tx1.Close(err)
 		}()
 
-		var invoiceSum int64
-		if invoiceSum, err = tx1.GetAmount(); err != nil {
+		var accountSum int64
+		if accountSum, err = tx1.GetAmount(); err != nil {
 			return err
 		}
 		time.Sleep(time.Millisecond * 150)
 
 		//update account in transaction 1
-		if err = tx1.UpdateInvoice(invoiceSum + 500); err != nil {
+		if err = tx1.UpdateAccount(accountSum + 500); err != nil {
 			return err
 		}
 		//time.Sleep(time.Millisecond * 100)
@@ -60,15 +60,15 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 			tx2.Close(err)
 		}()
 
-		var invoiceSum int64
-		if invoiceSum, err = tx2.GetAmount(); err != nil {
+		var accountSum int64
+		if accountSum, err = tx2.GetAmount(); err != nil {
 			return err
 		}
 
 		time.Sleep(time.Millisecond * 100)
 
 		//update account in transaction 2
-		if err = tx2.UpdateInvoice(invoiceSum + 200); err != nil {
+		if err = tx2.UpdateAccount(accountSum + 200); err != nil {
 			return err
 		}
 
@@ -90,7 +90,7 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 }
 
 func MySQLLostUpdateHack(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel,
-	dbName string, InvoiceIdInt, newAmount, version int) (err error) {
+	dbName string, AccountIdInt, newAmount, version int) (err error) {
 	var tx1 *helper.Transaction
 	if tx1, err = helper.CreateTransaction(ctx, db, txLevel, 1, dbName); err != nil {
 		return err
@@ -98,9 +98,9 @@ func MySQLLostUpdateHack(ctx context.Context, db *sqlx.DB, txLevel sql.Isolation
 
 	tx := tx1.GetTx()
 
-	query := "UPDATE invoices SET amount = ?, version = version + 1 WHERE id = ? and version = ?"
+	query := "UPDATE accounts SET amount = ?, version = version + 1 WHERE id = ? and version = ?"
 	var res sql.Result
-	if res, err = tx.Exec(query, newAmount, InvoiceIdInt, version); err != nil {
+	if res, err = tx.Exec(query, newAmount, AccountIdInt, version); err != nil {
 		fmt.Printf("failed to update account in transaction with error %s \n")
 		return
 	}

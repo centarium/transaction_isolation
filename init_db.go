@@ -134,8 +134,8 @@ func dbInitString() string {
 	return `CREATE DATABASE ` + DB + ";"
 }
 
-func getCreateInvoicesTableString(dbName string) string {
-	postgresQuery := `CREATE TABLE invoices(
+func getCreateAccountsTableString(dbName string) string {
+	postgresQuery := `CREATE TABLE accounts(
     	id bigint primary key,
     	user_id bigint NOT NULL,
     	amount bigint,
@@ -148,7 +148,7 @@ func getCreateInvoicesTableString(dbName string) string {
 	case "postgres":
 		return postgresQuery
 	case "mysql":
-		return `CREATE TABLE invoices(
+		return `CREATE TABLE accounts(
     	id bigint primary key,
     	user_id bigint NOT NULL,
     	amount bigint,
@@ -156,7 +156,7 @@ func getCreateInvoicesTableString(dbName string) string {
     	updated_at timestamp default now()
 	) ENGINE = InnoDB`
 	case "oracle":
-		return `CREATE TABLE invoices (
+		return `CREATE TABLE accounts (
                           id NUMBER PRIMARY KEY,
                           user_id NUMBER,
                           amount NUMBER,
@@ -164,7 +164,7 @@ func getCreateInvoicesTableString(dbName string) string {
                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)`
 	case "sqlserver":
-		return `CREATE TABLE invoices(
+		return `CREATE TABLE accounts(
                          id bigint primary key,
                          user_id bigint NOT NULL,
                          amount bigint,
@@ -175,32 +175,32 @@ func getCreateInvoicesTableString(dbName string) string {
 	return postgresQuery
 }
 
-func CreateInvoices(dbName string) (db *sqlx.DB, err error) {
+func CreateAccounts(dbName string) (db *sqlx.DB, err error) {
 	db, err = GetDbConnection(dbName)
 	if err != nil {
 		fmt.Printf("failed to connect db server: %s", err)
 		return
 	}
 
-	dropTableQuery := `Drop Table if exists invoices`
+	dropTableQuery := `Drop Table if exists accounts`
 	if dbName == "oracle" {
-		dropTableQuery = "Drop Table invoices"
+		dropTableQuery = "Drop Table accounts"
 	}
 	if _, err = db.Exec(dropTableQuery); err != nil {
-		fmt.Printf("failed exec drop invoices: %s", err)
+		fmt.Printf("failed exec drop accounts: %s", err)
 		return
 	}
 
-	//create table invoices
-	createInvoicesString := getCreateInvoicesTableString(dbName)
+	//create table accounts
+	createAccountsString := getCreateAccountsTableString(dbName)
 
-	if _, err = db.Exec(createInvoicesString); err != nil {
-		fmt.Printf("failed exec create invoices: %s", err)
+	if _, err = db.Exec(createAccountsString); err != nil {
+		fmt.Printf("failed exec create accounts: %s", err)
 		return
 	}
 
-	if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-		fmt.Printf("DropAndCreateInvoice error: %s", err)
+	if err = helper.DropAndCreateAccount(db, dbName); err != nil {
+		fmt.Printf("DropAndCreateAccount error: %s", err)
 		return
 	}
 	return

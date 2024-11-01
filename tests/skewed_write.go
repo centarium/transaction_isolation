@@ -14,16 +14,16 @@ func TestSkewedWriteWithdrawal(ctx context.Context, db *sqlx.DB, txLevel sql.Iso
 	fmt.Println("----------------Skewed Write Withdrawal-----------------")
 
 	defer func() {
-		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		if err = helper.DropAndCreateAccount(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateAccount error: %s", err)
 		}
 	}()
 
-	if err = helper.CreateInvoice(db, 2); err != nil {
+	if err = helper.CreateAccount(db, 2); err != nil {
 		return err
 	}
 	defer func() {
-		helper.TruncateInvoices(db, dbName)
+		helper.TruncateAccounts(db, dbName)
 	}()
 
 	group, _ := errgroup.WithContext(ctx)
@@ -61,23 +61,23 @@ func TestSkewedWriteWithdrawal(ctx context.Context, db *sqlx.DB, txLevel sql.Iso
 		return
 	}
 
-	return helper.PrintUserInvoicesSum(db, 1)
+	return helper.PrintUserAccountsSum(db, 1)
 }
 
 func TestSkewedWriteWithdrawal2(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Skewed Write Withdrawal 2 Mysql-----------------")
 
 	defer func() {
-		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		if err = helper.DropAndCreateAccount(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateAccount error: %s", err)
 		}
 	}()
 
-	if err = helper.CreateInvoice(db, 2); err != nil {
+	if err = helper.CreateAccount(db, 2); err != nil {
 		return err
 	}
 	defer func() {
-		helper.TruncateInvoices(db, dbName)
+		helper.TruncateAccounts(db, dbName)
 	}()
 
 	group, _ := errgroup.WithContext(ctx)
@@ -115,5 +115,5 @@ func TestSkewedWriteWithdrawal2(ctx context.Context, db *sqlx.DB, txLevel sql.Is
 		return
 	}
 
-	return helper.PrintUserInvoicesSum(db, 1)
+	return helper.PrintUserAccountsSum(db, 1)
 }

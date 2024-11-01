@@ -16,8 +16,8 @@ func TestNonRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.Isolati
 	fmt.Println("----------------Nonrepeatable read-----------------")
 
 	defer func() {
-		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		if err = helper.DropAndCreateAccount(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateAccount error: %s", err)
 		}
 	}()
 
@@ -56,7 +56,7 @@ func TestNonRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.Isolati
 		time.Sleep(time.Millisecond * 100)
 
 		//update account in transaction 2
-		if err = tx2.UpdateInvoice(1500); err != nil {
+		if err = tx2.UpdateAccount(1500); err != nil {
 			return err
 		}
 
@@ -79,8 +79,8 @@ func TestNonRepeatableReadDelete(ctx context.Context, db *sqlx.DB, txLevel sql.I
 	fmt.Println("----------------Nonrepeatable read(Delete operation)-----------------")
 
 	defer func() {
-		if err = helper.DropAndCreateInvoice(db, dbName); err != nil {
-			fmt.Printf("DropAndCreateInvoice error: %s", err)
+		if err = helper.DropAndCreateAccount(db, dbName); err != nil {
+			fmt.Printf("DropAndCreateAccount error: %s", err)
 		}
 	}()
 
@@ -119,7 +119,7 @@ func TestNonRepeatableReadDelete(ctx context.Context, db *sqlx.DB, txLevel sql.I
 		time.Sleep(time.Millisecond * 100)
 
 		//update account in transaction 2
-		if err = tx2.DeleteInvoice(1500); err != nil {
+		if err = tx2.DeleteAccount(1500); err != nil {
 			return err
 		}
 
