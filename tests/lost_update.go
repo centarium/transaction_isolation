@@ -19,7 +19,7 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 		}
 	}()
 
-	//print current invoice sum
+	//print current account sum
 	if err = helper.PrintAmount(db); err != nil {
 		return
 	}
@@ -41,7 +41,7 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 		}
 		time.Sleep(time.Millisecond * 150)
 
-		//update invoice in transaction 1
+		//update account in transaction 1
 		if err = tx1.UpdateInvoice(invoiceSum + 500); err != nil {
 			return err
 		}
@@ -67,7 +67,7 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 
 		time.Sleep(time.Millisecond * 100)
 
-		//update invoice in transaction 2
+		//update account in transaction 2
 		if err = tx2.UpdateInvoice(invoiceSum + 200); err != nil {
 			return err
 		}
@@ -81,7 +81,7 @@ func TestLostUpdate(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel
 		return
 	}
 
-	//print current invoice sum
+	//print current account sum
 	if err = helper.PrintAmount(db); err != nil {
 		return
 	}
@@ -101,13 +101,13 @@ func MySQLLostUpdateHack(ctx context.Context, db *sqlx.DB, txLevel sql.Isolation
 	query := "UPDATE invoices SET amount = ?, version = version + 1 WHERE id = ? and version = ?"
 	var res sql.Result
 	if res, err = tx.Exec(query, newAmount, InvoiceIdInt, version); err != nil {
-		fmt.Printf("failed to update invoice in transaction with error %s \n")
+		fmt.Printf("failed to update account in transaction with error %s \n")
 		return
 	}
 
 	var rowsAffected int64
 	if rowsAffected, err = res.RowsAffected(); err != nil {
-		fmt.Printf("failed to update invoice in transaction with error %s \n")
+		fmt.Printf("failed to update account in transaction with error %s \n")
 	} else {
 		fmt.Printf("Rows affected: %d", rowsAffected)
 	}

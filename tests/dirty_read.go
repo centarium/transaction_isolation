@@ -34,17 +34,17 @@ func TestDirtyRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel,
 		tx2.Rollback()
 	}()
 
-	//print invoice amount in tx1: 1000
+	//print account amount in tx1: 1000
 	if err = tx1.PrintAmount(); err != nil {
 		return
 	}
 
-	//change invoice amount in tx2: 1000 -> 1500
+	//change account amount in tx2: 1000 -> 1500
 	if err = tx2.UpdateInvoice(1500); err != nil {
 		return
 	}
 
-	//print invoice amount in tx1 again
+	//print account amount in tx1 again
 	if err = tx1.PrintAmount(); err != nil {
 		return
 	}

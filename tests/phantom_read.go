@@ -47,7 +47,7 @@ func TestPhantom(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, d
 		if err = helper.CreateInvoice(db, 2); err != nil {
 			return err
 		}
-		fmt.Println("New invoice added")
+		fmt.Println("New account added")
 
 		return nil
 	})

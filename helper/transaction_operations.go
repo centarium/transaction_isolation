@@ -26,17 +26,17 @@ func (t *Transaction) PrintInvoicesSumByUserID(userID int) (err error) {
 	row := t.tx.QueryRow(fmt.Sprintf(`Select sum(amount) from invoices WHERE user_id = '%d'`, userID))
 
 	if err = row.Err(); err != nil {
-		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
+		fmt.Printf("failed select account by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
 	var invoicesSum int64
 	if err = row.Scan(&invoicesSum); err != nil {
-		fmt.Printf("failed to scan invoice by transaction %d: %s\n", t.transactionNum, err)
+		fmt.Printf("failed to scan account by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
-	fmt.Printf("Invoice sum in transaction %d: %d \n", t.transactionNum, invoicesSum)
+	fmt.Printf("Account sum in transaction %d: %d \n", t.transactionNum, invoicesSum)
 	return
 }
 
@@ -44,17 +44,17 @@ func (t *Transaction) PrintAmount() (err error) {
 	row := t.tx.QueryRow(`Select amount from invoices WHERE id = ` + InvoiceIdStr)
 
 	if err = row.Err(); err != nil {
-		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
+		fmt.Printf("failed select account by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
 	var invoiceSum int64
 	if err = row.Scan(&invoiceSum); err != nil {
-		fmt.Printf("failed to scan invoice by transaction %d: %s\n", t.transactionNum, err)
+		fmt.Printf("failed to scan account by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
-	fmt.Printf("Invoice sum in transaction %d: %d \n", t.transactionNum, invoiceSum)
+	fmt.Printf("Account sum in transaction %d: %d \n", t.transactionNum, invoiceSum)
 	return
 }
 
@@ -67,12 +67,12 @@ func (t *Transaction) GetAmountWithShareLock() (invoiceSum int64, err error) {
 	row := t.tx.QueryRow(query)
 
 	if err = row.Err(); err != nil {
-		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
+		fmt.Printf("failed select account by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
 	if err = row.Scan(&invoiceSum); err != nil {
-		fmt.Printf("failed to scan invoice by transaction %d: %s\n", t.transactionNum, err)
+		fmt.Printf("failed to scan account by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
@@ -88,12 +88,12 @@ func (t *Transaction) GetAmountWithExclusiveLock() (invoiceSum int64, err error)
 	row := t.tx.QueryRow(query)
 
 	if err = row.Err(); err != nil {
-		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
+		fmt.Printf("failed select account by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
 	if err = row.Scan(&invoiceSum); err != nil {
-		fmt.Printf("failed to scan invoice by transaction %d: %s\n", t.transactionNum, err)
+		fmt.Printf("failed to scan account by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
@@ -104,15 +104,30 @@ func (t *Transaction) GetAmount() (invoiceSum int64, err error) {
 	row := t.tx.QueryRow(`Select amount from invoices WHERE id = ` + InvoiceIdStr)
 
 	if err = row.Err(); err != nil {
-		fmt.Printf("failed select invoice by transaction %d: %s\n", t.transactionNum, err)
+		fmt.Printf("failed select account by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
 	if err = row.Scan(&invoiceSum); err != nil {
-		fmt.Printf("failed to scan invoice by transaction %d: %s\n", t.transactionNum, err)
+		fmt.Printf("failed to scan account by transaction %d: %s\n", t.transactionNum, err)
 		return
 	}
 
+	return
+}
+
+func (t *Transaction) Withdrawal2(invoiceId int, dbName string) (err error) {
+	query := fmt.Sprintf(`
+			UPDATE invoices AS t1
+    		JOIN (
+        		SELECT SUM(amount) AS total_amount FROM invoices WHERE user_id = 1
+    		) AS t2
+			SET t1.amount = t1.amount - 1000
+			WHERE t1.id = %d AND t1.amount >= 1000 AND t2.total_amount >= 2000;
+		`, invoiceId)
+	if _, err = t.tx.Exec(query); err != nil {
+		fmt.Printf("error withdrawal2 %d: %s \n", t.transactionNum, err)
+	}
 	return
 }
 
@@ -147,7 +162,7 @@ func (t *Transaction) Withdrawal(invoiceId int, dbName string) (err error) {
 }
 
 func (t *Transaction) UpdateInvoiceId(newAmount int64, isIncrement bool) (err error) {
-	fmt.Printf("Update invoice amount in transaction %d to %d \n", t.transactionNum, newAmount)
+	fmt.Printf("Update account amount in transaction %d to %d \n", t.transactionNum, newAmount)
 
 	queryLeftSide := `UPDATE invoices SET amount = `
 	if isIncrement {
@@ -163,13 +178,13 @@ func (t *Transaction) UpdateInvoiceId(newAmount int64, isIncrement bool) (err er
 	case "sqlserver":
 		query = queryLeftSide + ` @Amount WHERE id = @InvoiceID`
 		if _, err = t.tx.Exec(query, sql.Named("Amount", newAmount), sql.Named("InvoiceID", 2)); err != nil {
-			fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
+			fmt.Printf("failed exec update account in transaction %d: %s \n", t.transactionNum, err)
 		}
 		return
 	case "oracle":
 		query = queryLeftSide + ` :Amount WHERE id = :InvoiceID`
 		if _, err = t.tx.Exec(query, sql.Named("Amount", newAmount), sql.Named("InvoiceID", 2)); err != nil {
-			fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
+			fmt.Printf("failed exec update account in transaction %d: %s \n", t.transactionNum, err)
 		}
 		return
 	default:
@@ -177,14 +192,14 @@ func (t *Transaction) UpdateInvoiceId(newAmount int64, isIncrement bool) (err er
 	}
 
 	if _, err = t.tx.Exec(query, newAmount, 2); err != nil {
-		fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
+		fmt.Printf("failed exec update account in transaction %d: %s \n", t.transactionNum, err)
 		return
 	}
 	return
 }
 
 func (t *Transaction) UpdateInvoice(newAmount int64) (err error) {
-	fmt.Printf("Update invoice amount in transaction %d to %d \n", t.transactionNum, newAmount)
+	fmt.Printf("Update account amount in transaction %d to %d \n", t.transactionNum, newAmount)
 
 	queryLeftSide := `UPDATE invoices SET amount = `
 
@@ -197,13 +212,13 @@ func (t *Transaction) UpdateInvoice(newAmount int64) (err error) {
 	case "sqlserver":
 		query = queryLeftSide + ` @Amount WHERE id = @InvoiceID`
 		if _, err = t.tx.Exec(query, sql.Named("Amount", newAmount), sql.Named("InvoiceID", InvoiceIdInt)); err != nil {
-			fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
+			fmt.Printf("failed exec update account in transaction %d: %s \n", t.transactionNum, err)
 		}
 		return
 	case "oracle":
 		query = queryLeftSide + ` :Amount WHERE id = :InvoiceID`
 		if _, err = t.tx.Exec(query, sql.Named("Amount", newAmount), sql.Named("InvoiceID", InvoiceIdInt)); err != nil {
-			fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
+			fmt.Printf("failed exec update account in transaction %d: %s \n", t.transactionNum, err)
 		}
 		return
 	default:
@@ -211,7 +226,7 @@ func (t *Transaction) UpdateInvoice(newAmount int64) (err error) {
 	}
 
 	if _, err = t.tx.Exec(query, newAmount, InvoiceIdInt); err != nil {
-		fmt.Printf("failed exec update invoice in transaction %d: %s \n", t.transactionNum, err)
+		fmt.Printf("failed exec update account in transaction %d: %s \n", t.transactionNum, err)
 		return
 	}
 	return
@@ -221,7 +236,7 @@ func (t *Transaction) DeleteInvoice(invoiceId int) (err error) {
 	if _, err = t.tx.Exec(fmt.Sprintf(
 		fmt.Sprintf("DELETE FROM invoices WHERE id = %d", invoiceId),
 	)); err != nil {
-		fmt.Printf("failed exec delete invoice: %s", err)
+		fmt.Printf("failed exec delete account: %s", err)
 		return
 	}
 	return nil

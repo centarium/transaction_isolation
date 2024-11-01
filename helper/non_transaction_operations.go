@@ -9,17 +9,17 @@ func PrintAmount(db *sqlx.DB) (err error) {
 	row := db.QueryRow(`Select amount from invoices WHERE id = ` + InvoiceIdStr)
 
 	if err = row.Err(); err != nil {
-		fmt.Printf("failed select invoice: %s\n", err)
+		fmt.Printf("failed select account: %s\n", err)
 		return
 	}
 
 	var invoiceSum int64
 	if err = row.Scan(&invoiceSum); err != nil {
-		fmt.Printf("failed to scan invoice: %s\n", err)
+		fmt.Printf("failed to scan account: %s\n", err)
 		return
 	}
 
-	fmt.Printf("Invoice sum: %d \n", invoiceSum)
+	fmt.Printf("Account sum: %d \n", invoiceSum)
 	return
 }
 
@@ -28,7 +28,7 @@ func DropAndCreateInvoice(db *sqlx.DB, dbName string) (err error) {
 		return err
 	}
 
-	//create invoice for tests
+	//create account for tests
 	if err = CreateInvoice(db, InvoiceIdInt); err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func TruncateInvoices(db *sqlx.DB, dbName string) (err error) {
 	}
 
 	if _, err = db.Exec(truncateString); err != nil {
-		fmt.Printf("failed exec drop test invoice: %s", err)
+		fmt.Printf("failed exec drop test account: %s", err)
 		return
 	}
 	return nil
@@ -66,7 +66,7 @@ func DeleteInvoice(db *sqlx.DB, invoiceId int) (err error) {
 	if _, err = db.Exec(fmt.Sprintf(
 		fmt.Sprintf("DELETE FROM invoices WHERE id = %d", invoiceId),
 	)); err != nil {
-		fmt.Printf("failed exec delete invoice: %s", err)
+		fmt.Printf("failed exec delete account: %s", err)
 		return
 	}
 	return nil
@@ -76,13 +76,13 @@ func PrintUserInvoicesSum(db *sqlx.DB, userId int) (err error) {
 	row := db.QueryRow(fmt.Sprintf(`Select SUM(amount) from invoices WHERE user_id = %d`, userId))
 
 	if err = row.Err(); err != nil {
-		fmt.Printf("failed select invoice: %s\n", err)
+		fmt.Printf("failed select account: %s\n", err)
 		return
 	}
 
 	var invoiceSum int64
 	if err = row.Scan(&invoiceSum); err != nil {
-		fmt.Printf("failed to scan invoice: %s\n", err)
+		fmt.Printf("failed to scan account: %s\n", err)
 		return
 	}
 

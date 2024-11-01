@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// TestNonRepeatableRead - start transaction, read invoice,
-// then update invoice outside of transaction - transaction can see changes.
+// TestNonRepeatableRead - start transaction, read account,
+// then update account outside of transaction - transaction can see changes.
 func TestNonRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Nonrepeatable read-----------------")
 
@@ -55,12 +55,12 @@ func TestNonRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.Isolati
 		}()
 		time.Sleep(time.Millisecond * 100)
 
-		//update invoice in transaction 2
+		//update account in transaction 2
 		if err = tx2.UpdateInvoice(1500); err != nil {
 			return err
 		}
 
-		fmt.Println("Invoice updated")
+		fmt.Println("Account updated")
 
 		return err
 	})
@@ -73,8 +73,8 @@ func TestNonRepeatableRead(ctx context.Context, db *sqlx.DB, txLevel sql.Isolati
 	return
 }
 
-// TestNonRepeatableRead - start transaction, read invoice,
-// then update invoice outside of transaction - transaction can see changes.
+// TestNonRepeatableRead - start transaction, read account,
+// then update account outside of transaction - transaction can see changes.
 func TestNonRepeatableReadDelete(ctx context.Context, db *sqlx.DB, txLevel sql.IsolationLevel, dbName string) (err error) {
 	fmt.Println("----------------Nonrepeatable read(Delete operation)-----------------")
 
@@ -118,12 +118,12 @@ func TestNonRepeatableReadDelete(ctx context.Context, db *sqlx.DB, txLevel sql.I
 		}()
 		time.Sleep(time.Millisecond * 100)
 
-		//update invoice in transaction 2
+		//update account in transaction 2
 		if err = tx2.DeleteInvoice(1500); err != nil {
 			return err
 		}
 
-		fmt.Println("Invoice deleted")
+		fmt.Println("Account deleted")
 
 		return err
 	})
