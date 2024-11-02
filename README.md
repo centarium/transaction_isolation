@@ -1,4 +1,4 @@
-# Уровни изоляции транзакций в PostgreSQL, MySQL, SQL Server, Oracle с примерами на Go
+# Transaction Isolation Levels in PostgreSQL, MySQL, SQL Server, and Oracle with Examples in Go
 
 *************************************************************************
 
