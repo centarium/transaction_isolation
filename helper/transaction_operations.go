@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"time"
 )
 
 const (
@@ -139,6 +140,7 @@ func (t *Transaction) Withdrawal(accountId int, dbName string) (err error) {
 		if _, err = t.tx.Exec(querySetTotalAmount); err != nil {
 			fmt.Printf("failed set @total_amount in transaction %d: %s \n", t.transactionNum, err)
 		}
+		time.Sleep(100 * time.Millisecond)
 		queryUpdate := fmt.Sprintf(`
 			UPDATE accounts
 			SET amount = amount - 1000

@@ -82,7 +82,7 @@ func SerializableCmd(_ *cobra.Command, args []string) (err error) {
 
 	/*
 		postgres: 1000, ERROR: could not serialize access due to read/write dependencies among transactions (SQLSTATE 40001)
-		mysql: 1000
+		mysql: 1000, Error 1213: Deadlock found when trying to get lock; try restarting transaction
 		oracle: 0
 		sqlserver: 1000
 	*/
